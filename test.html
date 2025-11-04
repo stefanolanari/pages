@@ -1,1 +1,90 @@
 
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>ECharts → PDF vettoriale con pdfmake</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
+      background: #f8f9fa;
+    }
+    #chart {
+      width: 600px;
+      height: 400px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h2>ECharts → PDF vettoriale (pdfmake)</h2>
+
+  <div id="chart"></div>
+  <button id="exportBtn">📄 Esporta PDF vettoriale</button>
+
+  <script>
+    // 1️⃣ Inizializza ECharts in modalità SVG
+    var chart = echarts.init(document.getElementById('chart'), null, { renderer: 'svg' });
+    chart.setOption({
+      title: { text: 'Vendite Mensili', left: 'center' },
+      tooltip: {},
+      xAxis: { data: ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu'] },
+      yAxis: {},
+      series: [{
+        name: 'Vendite',
+        type: 'bar',
+        data: [500, 800, 600, 1000, 750, 900],
+        itemStyle: { color: '#007bff' }
+      }]
+    });
+
+    // 2️⃣ Al click, estrai l'SVG e genera il PDF
+    document.getElementById('exportBtn').addEventListener('click', function() {
+      // Attendi un attimo per assicurarti che il grafico sia renderizzato
+      setTimeout(() => {
+        var svg = chart.getDom().querySelector('svg');
+        var svgString = new XMLSerializer().serializeToString(svg);
+
+        // 3️⃣ Crea il documento pdfmake
+        var docDefinition = {
+          content: [
+            { text: 'Report Vendite (grafico ECharts vettoriale)', style: 'header' },
+            { svg: svgString, width: 500, alignment: 'center' },
+            { text: '\nGenerato con ECharts + pdfmake', style: 'footer' }
+          ],
+          styles: {
+            header: { fontSize: 18, bold: true, margin: [0, 0, 0, 10], alignment: 'center' },
+            footer: { fontSize: 10, italics: true, alignment: 'center' }
+          }
+        };
+
+        // 4️⃣ Esporta il PDF
+        pdfMake.createPdf(docDefinition).download('grafico_vettoriale.pdf');
+      }, 300);
+    });
+  </script>
+</body>
+</html>
