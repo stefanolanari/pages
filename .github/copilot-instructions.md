@@ -59,12 +59,6 @@ Every example follows this template:
 </body>
 ```
 
-### Document Definition Patterns
-- **Page setup**: Always use `pageSize: 'A4'` and consistent margins `[40, 60, 40, 60]`
-- **Content structure**: Use array of objects with `text`, `canvas`, or table elements
-- **Styling**: Define global styles in `styles` object (see `ese_b07_pdfmake.html`)
-- **Text formatting**: Use array syntax for inline styling: `{ text: ['normal', { text: 'bold', bold: true }] }`
-- **Canvas elements**: For shapes/lines, use `canvas` with `type: 'rect'|'line'` objects
 
 ### Common Conventions
 - **Comments**: Use Italian comments with emoji prefixes (🎨, 📄, etc.)
