@@ -34,9 +34,18 @@
             ],
             absolutePosition: { x: 40, y: 80 }
           },
-          // Testo interno Box 1 (titolo + paragrafo come elementi separati)
-          { text: 'Box 1: Informazioni principali', absolutePosition: { x: 60, y: 100 }, style: 'boxTitle' },
-          { text: "Questo testo è posizionato con absolutePosition all'interno del primo box. Puoi usare righe multiple e stili.", absolutePosition: { x: 60, y: 118 }, width: 200, style: 'boxText' },
+          // Testo interno Box 1: usare una table single-column per forzare il wrapping
+          {
+            table: {
+              widths: [200],
+              body: [
+                [ { text: 'Box 1: Informazioni principali', style: 'boxTitle' } ],
+                [ { text: "Questo testo è posizionato con absolutePosition all'interno del primo box. Puoi usare righe multiple e stili.", style: 'boxText' } ]
+              ]
+            },
+            layout: 'noBorders',
+            absolutePosition: { x: 60, y: 100 }
+          },
 
           // Box 2 - canvas con absolutePosition
           {
@@ -55,8 +64,20 @@
             ],
             absolutePosition: { x: 120, y: 360 }
           },
-          { text: 'Box 3: Nota finale', absolutePosition: { x: 140, y: 380 }, style: 'boxTitle3' },
-          { text: 'Questo box è largo e contiene una breve nota. I box sono creati con canvas, il testo è posizionato tramite absolutePosition.', absolutePosition: { x: 140, y: 398 }, width: 320, style: 'boxText' }
+          // Testo interno Box 3: usare una table single-column per forzare il wrapping
+          {
+            table: {
+              widths: [320],              
+              body: [
+                [ { text: 'Box 3: Nota finale', style: 'boxTitle3' } ],
+                [ { text: 'Questo box è largo e contiene una breve nota. I box sono creati con canvas, il testo è posizionato tramite absolutePosition. Aggiungo testo per capire cosa succede quando non starebbe nel box. ', style: 'boxText' } ],
+                [ { text: ' ', style: 'boxText' } ],
+                [ { text: 'Testo esterno al box, clipping automatico non supportato', style: 'boxText' } ]
+              ]
+            },
+            layout: 'noBorders',
+            absolutePosition: { x: 140, y: 360 }
+          }
         ],
         styles: {
           boxTitle: { fontSize: 13, bold: true, color: '#003a63' },
