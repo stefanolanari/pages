@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>Linee colorate e spessori</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 2rem;
+    }
+    button {
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: none;
+      background: #0077cc;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #005fa3;
+    }
+  </style>
+</head>
+<body>
+  <h2>Linee colorate e spessori</h2>
+  <p>Questo esempio disegna linee orizzontali, verticali e diagonali con colori e spessori diversi.</p>
+  <button onclick="generaPDF()">Genera PDF</button>
+
+  <script>
+    function generaPDF() {
+      const dd = {
+        pageSize: 'A4',
+        pageMargins: [40, 40, 40, 40],
+        content: [
+          { text: 'Esempio di linee in pdfMake', fontSize: 18, bold: true, margin: [0, 0, 0, 20] },
+
+          {
+            canvas: [
+              // Linea nera sottile
+              { type: 'line', x1: 40, y1: 100, x2: 550, y2: 100, lineWidth: 1, lineColor: 'black' },
+
+              // Linea rossa spessa
+              { type: 'line', x1: 40, y1: 150, x2: 550, y2: 150, lineWidth: 5, lineColor: 'red' },
+
+              // Linea verde diagonale
+              { type: 'line', x1: 60, y1: 200, x2: 300, y2: 300, lineWidth: 3, lineColor: 'green' },
+
+              // Linea blu verticale
+              { type: 'line', x1: 400, y1: 180, x2: 400, y2: 350, lineWidth: 4, lineColor: 'blue' },
+
+              // Linea tratteggiata (grigia)
+              { 
+                type: 'line',
+                x1: 60, y1: 380, x2: 550, y2: 380,
+                lineWidth: 2, lineColor: '#777',
+                dash: { length: 5, space: 3 } // tratteggio
+              },
+
+              // Linea arancione diagonale inversa
+              { type: 'line', x1: 550, y1: 420, x2: 100, y2: 520, lineWidth: 6, lineColor: 'orange' }
+            ]
+          },
+
+          { text: '\nLinee disegnate con pdfMake usando canvas e tipo "line".', fontSize: 11, margin: [0, 20, 0, 0] }
+        ]
+      };
+
+      pdfMake.createPdf(dd).open();
+    }
+  </script>
+</body>
+</html>
