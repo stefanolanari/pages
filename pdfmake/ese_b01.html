@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>ESE_B01</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 2rem;
+    }
+    button {
+      padding: 10px 16px;
+      border-radius: 6px;
+      border: none;
+      background: #0077cc;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #005fa3;
+    }
+  </style>
+</head>
+<body>
+  <h2>Due box con testo sovrapposto</h2>
+  <p>Premi il pulsante per generare il PDF con due rettangoli e testo sopra ciascuno.</p>
+  <button onclick="generaPDF()">Genera PDF</button>
+
+  <script>
+    function generaPDF() {
+      const dd = {
+        pageSize: 'A4',
+        pageMargins: [40, 40, 40, 40],
+        content: [
+          { text: 'Due box con testo sovrapposto', fontSize: 16, bold: true, margin: [0,0,0,20] },
+
+          // BOX 1 (grigio)
+          {
+            canvas: [
+              {
+                type: 'rect',
+                x: 0,
+                y: 0,
+                w: 200,
+                h: 80,
+                color: '#dddddd',
+                lineColor: '#000000',
+                lineWidth: 1
+              }
+            ],
+            absolutePosition: { x: 60, y: 120 }
+          },
+          {
+            text: [
+              { text: 'BOX 1\n', bold: true, fontSize: 12 },
+              { text: 'Testo all’interno del primo box.\nLorem ipsum dolor sit amet.' }
+            ],
+            absolutePosition: { x: 75, y: 135 },
+            width: 180
+          },
+
+          // BOX 2 (giallo)
+          {
+            canvas: [
+              {
+                type: 'rect',
+                x: 0,
+                y: 0,
+                w: 250,
+                h: 100,
+                color: '#fff799',
+                lineColor: '#cc0000',
+                lineWidth: 2
+              }
+            ],
+            absolutePosition: { x: 320, y: 260 }
+          },
+          {
+            text: [
+              { text: 'BOX 2\n', bold: true, fontSize: 14, color: 'blue' },
+              { text: 'Secondo box, con bordo rosso e testo centrato.' }
+            ],
+            absolutePosition: { x: 340, y: 285 },
+            width: 210
+          },
+
+          { text: '\n\nEntrambi i box sono disegnati con canvas e testo sovrapposto.', margin: [0, 420, 0, 0], fontSize: 10 }
+        ]
+      };
+
+      pdfMake.createPdf(dd).open();
+    }
+  </script>
+</body>
+</html>
