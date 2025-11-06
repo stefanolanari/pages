@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>Esempio 09 - Barcode, QR e DataMatrix</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+  <!-- bwip-js: genera barcode (Code39, DataMatrix, ecc.) in canvas nel browser -->
+  <script src="https://cdn.jsdelivr.net/npm/bwip-js@2.0.9/dist/bwip-js-min.js"></script>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 2rem;
+    }
+    button {
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: none;
+      background: #0077cc;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    button:hover { background: #005fa3; }
+    .note { margin-top: 1rem; color: #444 }
+  </style>
+</head>
+<body>
+  <h2>Ese. 09 — Barcode (3 di 9), QR e DataMatrix</h2>
+  <p>Questo esempio mostra come aggiungere tre tipi di codici a barre in un PDF generato con <strong>pdfMake</strong>.
+  Premi il pulsante per generare il PDF.</p>
+  <button onclick="generaPDF()">Genera PDF</button>
+  
+  <script>
+    async function generaPDF() {
+      // Generiamo i barcode come immagini usando bwip-js (canvas -> dataURL)
+      let code39DataUrl = null;
+      let datamatrixDataUrl = null;
+
+      try {
+        // Code 3 di 9 (code39)
+        const c1 = document.createElement('canvas');
+        try {
+          bwipjs.toCanvas(c1, {
+            bcid:        'code39',       // Barcode type
+            text:        'CODE39-12345', // Valore
+            scale:       3,              // Scala dei pixel
+            includetext: true,           // Mostra il testo sotto
+            height:      10
+          });
+          code39DataUrl = c1.toDataURL('image/png');
+        } catch (err) {
+          console.warn('bwip-js code39 error', err);
+          code39DataUrl = null;
+        }
+
+        // DataMatrix
+        const c2 = document.createElement('canvas');
+        try {
+          bwipjs.toCanvas(c2, {
+            bcid:  'datamatrix',
+            text:  'DM:20231106:XYZ',
+            scale: 3
+          });
+          datamatrixDataUrl = c2.toDataURL('image/png');
+        } catch (err) {
+          console.warn('bwip-js datamatrix error', err);
+          datamatrixDataUrl = null;
+        }
+      } catch (e) {
+        console.warn('bwip-js non disponibile o errore generale', e);
+      }
+
+      // Definizione documento: tre esempi affiancati
+      const dd = {
+        pageSize: 'A4',
+        pageMargins: [40, 60, 40, 60],
+        content: [
+          { text: 'Esempio 09 — Barcode e QR', style: 'header' },
+          { text: '\n' },
+          {
+            columns: [
+              // Colonna 1: Code39 (immagine) o fallback testo
+              {
+                width: '33%',
+                stack: [
+                  { text: 'Code 3 di 9 (Code39)', style: 'label' },
+                  code39DataUrl
+                    ? { image: code39DataUrl, width: 150, margin: [0,8,0,0] }
+                    : { text: '[Code39 non generato - bwip-js mancante o errore]', style: 'small', margin: [0,8,0,0] },
+                  { text: 'Valore: CODE39-12345', style: 'small', margin: [0,6,0,0] }
+                ]
+              },
+
+              // Colonna 2: QR code (uso nativo pdfMake)
+              {
+                width: '33%',
+                stack: [
+                  { text: 'QR Code', style: 'label' },
+                  { qr: 'https://example.com/presa-in-carico/12345', fit: 120, margin: [0,8,0,0] },
+                  { text: 'URL di esempio: https://example.com/presa-in-carico/12345', style: 'small', margin: [0,6,0,0] }
+                ]
+              },
+
+              // Colonna 3: DataMatrix (immagine) o fallback testo
+              {
+                width: '33%',
+                stack: [
+                  { text: 'DataMatrix', style: 'label' },
+                  datamatrixDataUrl
+                    ? { image: datamatrixDataUrl, width: 120, margin: [0,8,0,0] }
+                    : { text: '[DataMatrix non generato - bwip-js mancante o errore]', style: 'small', margin: [0,8,0,0] },
+                  { text: 'Valore: DM:20231106:XYZ', style: 'small', margin: [0,6,0,0] }
+                ]
+              }
+            ]
+          }
+        ],
+        styles: {
+          header: { fontSize: 18, bold: true },
+          label: { fontSize: 12, bold: true },
+          small: { fontSize: 9, color: '#555' }
+        }
+      };
+
+      // Creazione PDF
+      try {
+        pdfMake.createPdf(dd).open();
+      } catch (e) {
+        alert('Errore nella generazione del PDF: ' + e);
+      }
+    }
+  </script>
+</body>
+</html>
