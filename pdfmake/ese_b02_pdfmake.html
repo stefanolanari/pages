@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>Testo posizionato e stilizzato</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 2rem;
+    }
+    button {
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: none;
+      background: #0077cc;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #005fa3;
+    }
+  </style>
+</head>
+<body>
+  <h2>Testo assoluto con stili diversi</h2>
+  <p>Questo esempio mostra testo arbitrario posizionato manualmente in modo assoluto con colori e font-size differenti.</p>
+  <button onclick="generaPDF()">Genera PDF</button>
+
+  <script>
+    function generaPDF() {
+      const dd = {
+        pageSize: 'A4',
+        pageMargins: [40, 40, 40, 40],
+        content: [
+          // Titolo principale
+          {
+            text: 'Esempio di testo posizionato con stili diversi',
+            fontSize: 18,
+            bold: true,
+            color: '#333333',
+            margin: [0, 0, 0, 40]
+          },
+
+          // Testo 1 - grande, blu, in alto a sinistra
+          {
+            text: 'Titolo Blu',
+            fontSize: 24,
+            bold: true,
+            color: '#0066cc',
+            absolutePosition: { x: 60, y: 120 }
+          },
+
+          // Testo 2 - corsivo, grigio, sotto il titolo
+          {
+            text: 'Sottotitolo in corsivo grigio chiaro',
+            fontSize: 14,
+            italics: true,
+            color: '#777777',
+            absolutePosition: { x: 65, y: 150 }
+          },
+
+          // Testo 3 - rosso, centrato sulla pagina
+          {
+            text: 'Attenzione: area riservata!',
+            fontSize: 16,
+            bold: true,
+            color: '#cc0000',
+            absolutePosition: { x: 150, y: 250 },
+            width: 300,
+            alignment: 'center'
+          },
+
+          // Testo 4 - piccolo, nero, in basso a sinistra
+          {
+            text: '© 2025 Azienda Demo - Tutti i diritti riservati',
+            fontSize: 9,
+            color: '#000000',
+            absolutePosition: { x: 60, y: 780 }
+          },
+
+          // Testo 5 - verde, grande, in basso a destra
+          {
+            text: 'APPROVATO ✅',
+            fontSize: 20,
+            bold: true,
+            color: 'green',
+            absolutePosition: { x: 400, y: 760 }
+          },
+
+          // Testo 6 - multilinea, con formattazione mista
+          {
+            text: [
+              { text: 'Nota importante:\n', bold: true, fontSize: 12 },
+              { text: 'Questo PDF è stato generato dinamicamente con ', fontSize: 11 },
+              { text: 'pdfMake', color: '#0077cc', fontSize: 11, italics: true },
+              { text: ' utilizzando testo posizionato in modo assoluto.', fontSize: 11 }
+            ],
+            absolutePosition: { x: 60, y: 400 },
+            width: 400
+          }
+        ]
+      };
+
+      pdfMake.createPdf(dd).open();
+    }
+  </script>
+</body>
+</html>
