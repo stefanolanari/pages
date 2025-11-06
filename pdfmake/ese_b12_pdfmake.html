@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>ESE B12 - Grafici con canvas (pdfMake)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 2rem;
+    }
+    button {
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: none;
+      background: #0077cc;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    button:hover { background: #005fa3; }
+    .note { margin-top: 1rem; color: #333 }
+  </style>
+</head>
+<body>
+  <h2>Grafici (canvas pdfMake)</h2>
+  <p>Questo esempio mostra un grafico a barre disegnato esclusivamente con i canvas di <code>pdfMake</code></p>
+  <button onclick="generaPDF()">Genera PDF</button>
+  
+  <script>
+    // 🎯 Contratto (inputs/outputs)
+    // - Input: array di numeri per ogni grafico
+    // - Output: array di oggetti canvas compatibili con pdfMake
+
+  // Dati di esempio (solo grafico a barre)
+  const datiBarre = [120, 200, 150, 80, 70, 110, 130];
+
+    // Palette colori
+    const palette = ['#2E86AB', '#F6C85F', '#F26419', '#8CD790', '#C06C84', '#6C5B7B'];
+
+    // Funzione che ritorna un canvas per un grafico a barre
+    function buildBarCanvas(data, opts = {}) {
+      const w = opts.width || 520; // larghezza canvas
+      const h = opts.height || 180; // altezza canvas
+      const padding = 30;
+      const chartW = w - padding * 2;
+      const chartH = h - padding * 2;
+  let max = Math.max(...data);
+  // protezione: evitare divisione per zero se tutti i valori sono 0 o array vuoto
+  if (!isFinite(max) || max <= 0) max = 1;
+  max = max * 1.1;
+      const barW = chartW / data.length * 0.7;
+
+      const canvas = [];
+
+      // sfondo griglia orizzontale
+      const gridLines = 4;
+      for (let i = 0; i <= gridLines; i++) {
+        const y = padding + (chartH / gridLines) * i;
+        canvas.push({ type: 'line', x1: padding, y1: y, x2: padding + chartW, y2: y, lineWidth: 0.5, color: '#cccccc' });
+      }
+
+      // barre
+      data.forEach((val, i) => {
+        const denom = data.length || 1;
+        const x = padding + i * (chartW / denom) + (chartW / denom - barW) / 2;
+        const safeVal = (isFinite(val) ? val : 0);
+        const height = (safeVal / max) * chartH;
+        const y = padding + chartH - height;
+        canvas.push({ type: 'rect', x: x, y: y, w: barW, h: height, color: palette[i % palette.length] });
+      });
+
+      // asse X e Y
+      canvas.push({ type: 'line', x1: padding, y1: padding + chartH, x2: padding + chartW, y2: padding + chartH, lineWidth: 1, color: '#222222' });
+      canvas.push({ type: 'line', x1: padding, y1: padding, x2: padding, y2: padding + chartH, lineWidth: 1, color: '#222222' });
+
+      // etichette X (ritorneremo numeri come testo separato nel dd, qui disegniamo solo le barre)
+      return { canvas, width: w, height: h };
+    }
+
+    // NOTE: semplificato: manteniamo solo il grafico a barre richiesto
+
+    // Funzione principale che costruisce il dd ed apre il PDF
+    function generaPDF() {
+      // Costruiamo il canvas per il grafico a barre
+      const bar = buildBarCanvas(datiBarre, { width: 520, height: 180 });
+
+      // Validazione preventiva: cerchiamo NaN/Infinity nel canvas delle barre
+      function scanForBadNumbers(obj, path) {
+        if (obj == null) return null;
+        if (Array.isArray(obj)) {
+          for (let i = 0; i < obj.length; i++) {
+            const res = scanForBadNumbers(obj[i], path + '[' + i + ']');
+            if (res) return res;
+          }
+          return null;
+        }
+        if (typeof obj === 'object') {
+          for (const k of Object.keys(obj)) {
+            const res = scanForBadNumbers(obj[k], path + '.' + k);
+            if (res) return res;
+          }
+          return null;
+        }
+        if (typeof obj === 'number') {
+          if (!isFinite(obj) || Number.isNaN(obj)) return path + ' -> ' + obj;
+        }
+        return null;
+      }
+
+      const bad = scanForBadNumbers(bar.canvas, 'bar.canvas');
+      if (bad) {
+        alert('Errore: valore non valido trovato nel canvas: ' + bad + '\nControlla i dati di input.');
+        console.error('Invalid number in canvas:', bad, bar.canvas);
+        return;
+      }
+
+      // Document definition (dd) semplificato: solo il grafico a barre e le etichette
+      const dd = {
+        content: [
+          { text: 'Grafico a barre disegnato con canvas', style: 'header' },
+          { text: '\n', margin: [0,4,0,4] },
+          { canvas: bar.canvas, width: bar.width, height: bar.height }
+        ],
+        styles: { header: { fontSize: 16, bold: true } },
+        defaultStyle: { font: 'Roboto' }
+      };
+
+      // Creiamo ed apriamo il PDF
+      pdfMake.createPdf(dd).open();
+    }
+  </script>
+</body>
+</html>
