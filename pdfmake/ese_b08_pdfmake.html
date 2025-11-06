@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>ese_b08 - Linee multiple e uso colori (nome / RGB / hex)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 2rem;
+    }
+    button {
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: none;
+      background: #0077cc;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #005fa3;
+    }
+  </style>
+</head>
+<body>
+  <h2>Testo e linee con colori indicati per nome o con codice</h2>
+  <p>Il colore può essere specificato con il nome (es. <em>red</em>), con un codice <em>hex</em> (es. <code>#00AA00</code>) o con la sintassi <em>rgb(r,g,b)</em> (es. <code>rgb(0,0,255)</code>).</p>
+  <button onclick="generaPDF()">Genera PDF</button>
+
+  <script>
+    function generaPDF(){
+      const dd = {
+        pageSize: 'A4',
+        pageMargins: [40, 60, 40, 60],
+
+        // 🎨 Stili globali riutilizzabili
+        styles: {
+          normal: { fontSize: 12, color: '#222' },
+          h1: { fontSize: 16, bold: true, color: '#222' },
+          caption: { fontSize: 10, color: '#555' },
+          codeStyle: { fontSize: 10, color: '#0077cc' },
+          label: { bold: true }
+        },
+
+        content: [
+          { text: 'Esempi di linee colorate e specifica colore', style: 'h1', margin: [0,0,0,12] },
+
+          // 1) Nome colore
+          { text: [ { text: '1) Colore con nome: ', style: 'label' }, { text: 'usa parole come "red" o "blue".', style: 'normal', color: 'red' } ], margin: [0,0,0,6] },
+          {
+            canvas: [
+              { type: 'line', x1: 0, y1: 6, x2: 360, y2: 6, lineWidth: 6, lineColor: 'red' },
+              { type: 'line', x1: 0, y1: 18, x2: 360, y2: 18, lineWidth: 3, lineColor: 'orange' }
+            ],
+            margin: [0,0,0,8]
+          },
+          { text: 'Nota: i nomi colore più comuni sono supportati.', style: 'caption', margin: [0,0,0,12] },
+
+          // 2) Hex
+          { text: [ { text: '2) Colore con codice hex: ', style: 'label' }, { text: '#00AA00, #006600, ecc.', style: 'normal' } ], margin: [0,0,0,6] },
+          {
+            canvas: [
+              { type: 'line', x1: 0, y1: 6, x2: 360, y2: 6, lineWidth: 6, lineColor: '#00AA00' },
+              { type: 'line', x1: 0, y1: 18, x2: 360, y2: 18, lineWidth: 3, lineColor: '#006600' }
+            ],
+            margin: [0,0,0,8]
+          },
+          { text: 'Nota: i codici hex usano il formato #RRGGBB.', style: 'caption', margin: [0,0,0,12] },
+
+          // 3) rgb()
+          { text: [ { text: '3) Colore con rgb(): ', style: 'label' }, { text: 'es. rgb(0,0,255) o rgb(128,0,128).', style: 'normal' } ], margin: [0,0,0,6] },
+          {
+            canvas: [
+              { type: 'line', x1: 0, y1: 6, x2: 360, y2: 6, lineWidth: 6, lineColor: 'rgb(0,0,255)' },
+              { type: 'line', x1: 0, y1: 18, x2: 360, y2: 18, lineWidth: 3, lineColor: 'rgb(128,0,128)' }
+            ],
+            margin: [0,0,0,16]
+          },
+
+          // Tabella riassuntiva
+          { text: 'Tabella riassuntiva (descrizione - esempio):', style: 'label', margin: [0,0,0,6] },
+          {
+            table: {
+              widths: [150, '*'],
+              body: [
+                [ { text: 'Descrizione', style: 'label' }, { text: 'Esempio visivo', style: 'label' } ],
+                [ 'Rosso (nome)', { canvas: [ { type: 'line', x1:0,y1:6,x2:240,y2:6,lineWidth:4,lineColor:'red' } ], margin:[0,6,0,6] } ],
+                [ 'Verde (hex)', { canvas: [ { type: 'line', x1:0,y1:6,x2:240,y2:6,lineWidth:4,lineColor:'#00AA00' } ], margin:[0,6,0,6] } ],
+                [ 'Blu (rgb)', { canvas: [ { type: 'line', x1:0,y1:6,x2:240,y2:6,lineWidth:4,lineColor:'rgb(0,0,255)' } ], margin:[0,6,0,6] } ]
+              ]
+            }
+          }
+        ]
+      };
+
+      pdfMake.createPdf(dd).open();
+    }
+  </script>
+</body>
+</html>
