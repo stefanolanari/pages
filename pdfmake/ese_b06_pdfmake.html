@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>pdfmake - formattazione parola per parola</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 2rem;
+    }
+    button {
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: none;
+      background: #0077cc;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #005fa3;
+    }
+  </style>
+</head>
+<body>
+  <h2>Formattazione di singole parole</h2>
+  <p>Ogni riga del PDF mostra come puoi stilizzare porzioni diverse di testo nello stesso paragrafo.</p>
+  <button onclick="generaPDF()">Genera PDF</button>
+
+  <script>
+    function generaPDF() {
+      const dd = {
+        pageSize: 'A4',
+        pageMargins: [40, 60, 40, 60],
+        content: [
+          { text: 'Esempio: formattazione di singole parole o porzioni di testo', fontSize: 16, bold: true, margin: [0, 0, 0, 20] },
+
+          // Riga 1
+          {
+            text: [
+              'Puoi scrivere del testo normale, poi ',
+              { text: 'in grassetto', bold: true },
+              ' e continuare normalmente.'
+            ],
+            margin: [0, 0, 0, 8]
+          },
+
+          // Riga 2
+          {
+            text: [
+              'Oppure mescolare ',
+              { text: 'corsivo', italics: true },
+              ' e ',
+              { text: 'grassetto', bold: true },
+              ' nella stessa frase.'
+            ],
+            margin: [0, 0, 0, 8]
+          },
+
+          // Riga 3
+          {
+            text: [
+              'Il colore può essere applicato ',
+              { text: 'solo a una parola', color: 'red' },
+              ' senza toccare il resto.'
+            ],
+            margin: [0, 0, 0, 8]
+          },
+
+          // Riga 4
+          {
+            text: [
+              'Puoi anche cambiare la ',
+              { text: 'dimensione del font', fontSize: 18 },
+              ' all’interno della stessa riga.'
+            ],
+            margin: [0, 0, 0, 8]
+          },
+
+          // Riga 5
+          {
+            text: [
+              'Evidenziazioni diverse: ',
+              { text: 'verde', color: 'green' }, ', ',
+              { text: 'blu', color: 'blue' }, ' e ',
+              { text: 'arancione', color: 'orange' }, '.'
+            ],
+            margin: [0, 0, 0, 8]
+          },
+
+          // Riga 6
+          {
+            text: [
+              'Puoi anche combinare più stili: ',
+              { text: 'grassetto + corsivo', bold: true, italics: true, color: '#9900cc' },
+              ' in un’unica parola.'
+            ],
+            margin: [0, 0, 0, 8]
+          },
+
+          // Riga 7
+          {
+            text: [
+              { text: 'Questo inizio è grande', fontSize: 20, color: '#333' },
+              ', mentre questa parte ',
+              { text: 'è piccola', fontSize: 8 },
+              ' e poco visibile.'
+            ],
+            margin: [0, 0, 0, 8]
+          },
+
+          // Riga 8
+          {
+            text: [
+              'Allineamento a sinistra con parole ',
+              { text: 'colorate', color: '#0077cc' },
+              ' sparse qua e là.'
+            ],
+            alignment: 'left',
+            margin: [0, 0, 0, 8]
+          },
+
+          // Riga 9
+          {
+            text: [
+              { text: 'Testo centrato', bold: true, fontSize: 14 },
+              ', con un tocco di ',
+              { text: 'stile', italics: true, color: '#cc0000' },
+              '.'
+            ],
+            alignment: 'center',
+            margin: [0, 0, 0, 8]
+          },
+
+          // Riga 10
+          {
+            text: [
+              'Infine, ',
+              { text: 'testo giustificato ', bold: true },
+              'che mostra come pdfMake adatti automaticamente la larghezza per mantenere un allineamento uniforme su entrambe le estremità della pagina. ' +
+              'Questo funziona anche con più stili combinati nella stessa frase.'
+            ],
+            alignment: 'justify'
+          }
+        ]
+      };
+
+      pdfMake.createPdf(dd).open();
+    }
+  </script>
+</body>
+</html>
