@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>ESE B11 - Tabelle a posizionamento assoluto</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 2rem;
+    }
+    button {
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: none;
+      background: #0077cc;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    button:hover { background: #005fa3; }
+    h2 { margin-bottom: 0.6rem; }
+  </style>
+</head>
+<body>
+  <h2>Esempio B11 — Tabelle a posizionamento assoluto</h2>
+  <p>Tre tabelle posizionate in punti diversi della pagina. Premi il pulsante per generare il PDF.</p>
+  <button onclick="generaPDF()">Genera PDF</button>
+
+  <script>
+    // 🎨 Generatore dell'esempio 11
+    // Il document definition (`dd`) non conterrà funzioni: creiamo qui i dati
+    function generaPDF() {
+      // 📄 impostazioni generali e font piccolo
+      var fontSizeSmall = 8; // piccolo
+
+      // 🧩 funzione helper per creare una riga con formattazione casuale (solo dati, non funzioni in dd)
+      function creaRigaCasuale(i) {
+        // generiamo sei celle con testo e alcune proprietà casuali
+        var row = [];
+        for (var c = 0; c < 6; c++) {
+          var cellText = 'R' + (i+1) + 'C' + (c+1);
+          // scelta casuale di stile
+          var r = Math.random();
+          var cell = { text: cellText };
+          if (r < 0.15) { cell.bold = true; }
+          else if (r < 0.30) { cell.italics = true; }
+          else if (r < 0.45) { cell.color = '#b22222'; }
+          else if (r < 0.60) { cell.fillColor = '#f3f3f3'; }
+          else if (r < 0.75) { cell.alignment = 'right'; }
+          else { /* normale */ }
+
+          // ogni tanto una cella con font leggermente più piccola
+          if (Math.random() < 0.08) { cell.fontSize = 7; }
+          row.push(cell);
+        }
+        return row;
+      }
+
+      // 📊 Creazione dei body delle tre tabelle (header + 20 righe ciascuna)
+      function creaBodyTabella(titolo, numRighe = 20) {
+        var body = [];
+        // header
+        var header = [];
+        for (var h = 0; h < 6; h++) {
+          header.push({ text: (titolo + ' H' + (h+1)), bold: true, fillColor: '#d9edf7', alignment: 'center' });
+        }
+        body.push(header);
+        // circa 20 righe
+        for (var i = 0; i < numRighe; i++) {
+          body.push(creaRigaCasuale(i));
+        }
+        return body;
+      }
+
+      // 🧾 i tre body
+      var body1 = creaBodyTabella('Tab1');
+      var body2 = creaBodyTabella('Tab2');
+      var body3 = creaBodyTabella('Tab3', 50);
+
+      // ✅ document definition senza funzioni o callback all'interno (solo dati e stringhe)
+      var dd = {
+        pageSize: 'A4',
+        pageMargins: [40, 60, 40, 60],
+        defaultStyle: { fontSize: fontSizeSmall },
+        content: [
+          { text: 'ESEMPIO B11 — Tabelle a posizionamento assoluto', style: 'title', margin: [0, 0, 0, 6] },
+          // prima tabella: sinistra alta
+          {
+            absolutePosition: { x: 40, y: 120 },
+            table: {
+              headerRows: 1,
+              widths: [25,25,25,25,25,25],
+              body: body1
+            },
+            layout: 'lightHorizontalLines'
+          },
+          // seconda tabella: destra alta
+          {
+            absolutePosition: { x: 320, y: 80 },
+            table: {
+              headerRows: 1,
+              widths: [25,25,25,25,25,25],
+              body: body2
+            },
+            layout: 'lightHorizontalLines'
+          },
+          // terza tabella: sinistra bassa
+          {
+            absolutePosition: { x: 100, y: 460 },
+            table: {
+              headerRows: 1,
+              widths: [25,25,25,25,25,25],
+              body: body3
+            },
+            layout: 'lightHorizontalLines'
+          }
+        ],
+        styles: {
+          title: { fontSize: 10, bold: true }
+        }
+      };
+
+      // 📤 Creazione e apertura del PDF
+      pdfMake.createPdf(dd).open();
+    }
+  </script>
+
+</body>
+</html>

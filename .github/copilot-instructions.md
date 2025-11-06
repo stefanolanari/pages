@@ -59,6 +59,8 @@ Every example follows this template:
 </body>
 ```
 
+### Code generation
+- The `dd` object must not contain functions or complex logic
 
 ### Common Conventions
 - **Comments**: Use Italian comments with emoji prefixes (🎨, 📄, etc.)
