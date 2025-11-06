@@ -24,8 +24,8 @@
   </style>
 </head>
 <body>
-  <h2>Esempio B11 — Tabelle a posizionamento assoluto</h2>
-  <p>Tre tabelle posizionate in punti diversi della pagina. Premi il pulsante per generare il PDF.</p>
+  <h2>Tabelle a posizionamento assoluto con dati provenienti da funzione</h2>
+  <p>Tre tabelle posizionate in punti diversi della pagina e la prima attinge da una ipotetica fun</p>
   <button onclick="generaPDF()">Genera PDF</button>
 
   <script>
@@ -64,6 +64,15 @@
         return body;
       }
 
+      function executeFun(fun) {
+        return {
+            headerRows: 1,
+            widths: [25,25,25,25,25,25],              
+            body: creaBodyTabella(fun, 5),
+            fun: fun
+        }        
+      }
+
       var body2 = creaBodyTabella('Tab2');
       var body3 = creaBodyTabella('Tab3', 50);
 
@@ -72,15 +81,12 @@
         pageMargins: [40, 60, 40, 60],
         defaultStyle: { fontSize: fontSizeSmall },
         content: [
-          { text: 'ESEMPIO B11 — Tabelle a posizionamento assoluto', style: 'title', margin: [0, 0, 0, 6] },
+          { text: 'Tabelle con dati provenienti da funzione', style: 'title', margin: [0, 0, 0, 6] },
           {
             absolutePosition: { x: 40, y: 120 },
             table: {
-              headerRows: 1,
-              widths: [25,25,25,25,25,25],              
               fun: "F(EXB;PIPPO;GET.DATA)"
-            },
-            layout: 'lightHorizontalLines'
+            },            
           },
           {
             absolutePosition: { x: 320, y: 80 },
@@ -88,8 +94,7 @@
               headerRows: 1,
               widths: [25,25,25,25,25,25],
               body: body2
-            },
-            layout: 'lightHorizontalLines'
+            },            
           },
           {
             absolutePosition: { x: 100, y: 460 },
@@ -108,7 +113,7 @@
 
       dd.content.forEach(function(item, index) {
         if (item.table && item.table.fun) {
-          item.table.body = creaBodyTabella(item.table.fun);
+          item.table = executeFun(item.table.fun);
         }
       });
 
