@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>pdfmake - formattazione con stili</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 2rem;
+    }
+    button {
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: none;
+      background: #0077cc;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #005fa3;
+    }
+  </style>
+</head>
+<body>
+  <h2>Formattazione di parole tramite stili</h2>
+  <p>Ogni parola o frase del PDF usa uno stile definito nella sezione <code>styles</code>.</p>
+  <button onclick="generaPDF()">Genera PDF</button>
+
+  <script>
+    function generaPDF() {
+      const dd = {
+        pageSize: 'A4',
+        pageMargins: [40, 60, 40, 60],
+
+        // 🎨 Definizione degli stili globali
+        styles: {
+          normal: { fontSize: 12, color: '#222' },
+          boldText: { bold: true, color: '#000' },
+          italicText: { italics: true, color: '#555' },
+          redText: { color: 'red' },
+          greenText: { color: 'green' },
+          blueText: { color: 'blue' },
+          bigText: { fontSize: 18, color: '#333' },
+          smallText: { fontSize: 8, color: '#777' },
+          mixStyle: { bold: true, italics: true, color: '#9900cc' },
+          centered: { alignment: 'center', fontSize: 13 },
+          justified: { alignment: 'justify', fontSize: 12 }
+        },
+
+        content: [
+          { text: 'Esempio di formattazione tramite stili', style: 'bigText', bold: true, margin: [0, 0, 0, 20] },
+
+          // Riga 1
+          { text: [ 'Questo è testo ', { text: 'in grassetto', style: 'boldText' }, ' e normale.' ], style: 'normal', margin: [0, 0, 0, 8] },
+
+          // Riga 2
+          { text: [ 'Qui abbiamo del testo ', { text: 'in corsivo', style: 'italicText' }, ' e poi di nuovo normale.' ], style: 'normal', margin: [0, 0, 0, 8] },
+
+          // Riga 3
+          { text: [ 'Colori diversi: ', { text: 'rosso', style: 'redText' }, ', ', { text: 'verde', style: 'greenText' }, ' e ', { text: 'blu', style: 'blueText' }, '.' ], style: 'normal', margin: [0, 0, 0, 8] },
+
+          // Riga 4
+          { text: [ 'Font grande ', { text: 'vs piccolo', style: 'smallText' }, ' sulla stessa riga.' ], style: 'bigText', margin: [0, 0, 0, 8] },
+
+          // Riga 5
+          { text: [ 'Puoi anche usare ', { text: 'uno stile misto', style: 'mixStyle' }, ' per ottenere effetti combinati.' ], style: 'normal', margin: [0, 0, 0, 8] },
+
+          // Riga 6
+          { text: [ { text: 'Questa frase è centrata e colorata di blu.', style: 'blueText' } ], style: 'centered', margin: [0, 0, 0, 8] },
+
+          // Riga 7
+          { text: [ 'Puoi cambiare l\'allineamento per creare paragrafi più ordinati e ', { text: 'giustificati', style: 'boldText' }, '.' ], style: 'justified', margin: [0, 0, 0, 8] },
+
+          // Riga 8
+          { text: [ 'Ogni parola può avere ', { text: 'uno stile diverso', style: 'italicText' }, ' anche all’interno della stessa frase.' ], style: 'normal', margin: [0, 0, 0, 8] },
+
+          // Riga 9
+          { text: [ 'I tuoi stili possono essere ', { text: 'riutilizzati', style: 'boldText' }, ' in qualsiasi parte del documento.' ], style: 'normal', margin: [0, 0, 0, 8] },
+
+          // Riga 10
+          { text: [ 'Infine, pdfMake gestisce automaticamente il flusso e i ritorni a capo anche con ', { text: 'stili multipli', style: 'redText' }, ' nello stesso paragrafo.' ], style: 'justified' }
+        ]
+      };
+
+      pdfMake.createPdf(dd).open();
+    }
+  </script>
+</body>
+</html>
