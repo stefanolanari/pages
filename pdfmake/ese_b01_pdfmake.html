@@ -25,17 +25,20 @@
   </style>
 </head>
 <body>
-  <h2>Due box con testo sovrapposto</h2>
-  <p>Premi il pulsante per generare il PDF con due rettangoli e testo sopra ciascuno.</p>
+  <h2>due box con testo (secondo centrato)</h2>
   <button onclick="generaPDF()">Genera PDF</button>
 
   <script>
     function generaPDF() {
+      // Specifiche dei box
+      const box1 = { x: 60, y: 120, w: 200, h: 80 };
+      const box2 = { x: 320, y: 260, w: 250, h: 100 };
+
       const dd = {
         pageSize: 'A4',
         pageMargins: [40, 40, 40, 40],
         content: [
-          { text: 'Due box con testo sovrapposto', fontSize: 16, bold: true, margin: [0,0,0,20] },
+          { text: 'Due box con testo (centrato nel secondo)', fontSize: 16, bold: true, margin: [0, 0, 0, 20] },
 
           // BOX 1 (grigio)
           {
@@ -44,50 +47,55 @@
                 type: 'rect',
                 x: 0,
                 y: 0,
-                w: 200,
-                h: 80,
+                w: box1.w,
+                h: box1.h,
                 color: '#dddddd',
                 lineColor: '#000000',
                 lineWidth: 1
               }
             ],
-            absolutePosition: { x: 60, y: 120 }
+            absolutePosition: { x: box1.x, y: box1.y }
           },
           {
             text: [
               { text: 'BOX 1\n', bold: true, fontSize: 12 },
               { text: 'Testo all’interno del primo box.\nLorem ipsum dolor sit amet.' }
             ],
-            absolutePosition: { x: 75, y: 135 },
-            width: 180
+            absolutePosition: { x: box1.x + 15, y: box1.y + 15 },
+            width: box1.w - 30
           },
 
-          // BOX 2 (giallo)
+          // BOX 2 (giallo, testo centrato)
           {
             canvas: [
               {
                 type: 'rect',
                 x: 0,
                 y: 0,
-                w: 250,
-                h: 100,
+                w: box2.w,
+                h: box2.h,
                 color: '#fff799',
                 lineColor: '#cc0000',
                 lineWidth: 2
               }
             ],
-            absolutePosition: { x: 320, y: 260 }
+            absolutePosition: { x: box2.x, y: box2.y }
           },
           {
             text: [
               { text: 'BOX 2\n', bold: true, fontSize: 14, color: 'blue' },
-              { text: 'Secondo box, con bordo rosso e testo centrato.' }
+              { text: 'Testo centrato orizzontalmente e verticalmente.' }
             ],
-            absolutePosition: { x: 340, y: 285 },
-            width: 210
+            absolutePosition: {
+              x: box2.x,
+              // Calcolo verticale: y + metà box - metà altezza stimata testo (~30)
+              y: box2.y + (box2.h / 2) - 30
+            },
+            width: box2.w,
+            alignment: 'center'
           },
 
-          { text: '\n\nEntrambi i box sono disegnati con canvas e testo sovrapposto.', margin: [0, 420, 0, 0], fontSize: 10 }
+          { text: '\n\nEntrambi i box sono disegnati con canvas e testo sopra di essi.', margin: [0, 420, 0, 0], fontSize: 10 }
         ]
       };
 
