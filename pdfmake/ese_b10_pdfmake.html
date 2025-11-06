@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>ESE B10 - Box a posizione assoluta (PDFMake)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; padding: 2rem; }
+    button { padding: 10px 18px; border-radius: 6px; border: none; background: #0077cc; color: white; font-size: 15px; cursor: pointer; }
+    button:hover { background: #005fa3; }
+    .note { margin-top: 1rem; color: #444; }
+  </style>
+</head>
+<body>
+  <h2>Box contenti testo</h2>
+  <p>Questo esempio mostra come disegnare dei box (rettangoli) in posizioni assolute sulla pagina e come piazzare del testo dentro ciascun box usando <code>absolutePosition</code> e <code>canvas</code>.</p>
+  <button onclick="generaPDF()">Genera PDF</button>  
+
+  <script>
+    function generaPDF() {
+      // 📄 Definizione del documento PDFMake con rettangoli disegnati via canvas
+      // Nota: ogni rettangolo è ora in un canvas separato con absolutePosition.
+      // I rettangoli nel canvas hanno x:0,y:0 così il loro posizionamento assoluto
+      // viene gestito correttamente dalla proprietà absolutePosition del canvas.
+      const dd = {
+        pageSize: 'A4',
+        pageMargins: [40, 60, 40, 60],
+        content: [
+          // Box 1 - canvas posizionato assolutamente
+          {
+            canvas: [
+              { type: 'rect', x: 0, y: 0, w: 220, h: 100, r: 6, color: '#e8f4ff', lineWidth: 1, lineColor: '#0077cc' }
+            ],
+            absolutePosition: { x: 40, y: 80 }
+          },
+          // Testo interno Box 1 (titolo + paragrafo come elementi separati)
+          { text: 'Box 1: Informazioni principali', absolutePosition: { x: 60, y: 100 }, style: 'boxTitle' },
+          { text: "Questo testo è posizionato con absolutePosition all'interno del primo box. Puoi usare righe multiple e stili.", absolutePosition: { x: 60, y: 118 }, width: 200, style: 'boxText' },
+
+          // Box 2 - canvas con absolutePosition
+          {
+            canvas: [
+              { type: 'rect', x: 0, y: 0, w: 250, h: 130, r: 8, color: '#fff3e6', lineWidth: 1, lineColor: '#ff8c00' }
+            ],
+            absolutePosition: { x: 300, y: 180 }
+          },
+          { text: 'Box 2: Contenuto centrale', absolutePosition: { x: 320, y: 200 }, style: 'boxTitle2' },
+          { text: 'Esempio di testo posizionato nel box centrale. Puoi variare x/y per spostare il testo.', absolutePosition: { x: 320, y: 218 }, width: 230, style: 'boxText' },
+
+          // Box 3 - canvas con absolutePosition
+          {
+            canvas: [
+              { type: 'rect', x: 0, y: 0, w: 360, h: 90, r: 4, color: '#eafbe9', lineWidth: 1, lineColor: '#2e8b57' }
+            ],
+            absolutePosition: { x: 120, y: 360 }
+          },
+          { text: 'Box 3: Nota finale', absolutePosition: { x: 140, y: 380 }, style: 'boxTitle3' },
+          { text: 'Questo box è largo e contiene una breve nota. I box sono creati con canvas, il testo è posizionato tramite absolutePosition.', absolutePosition: { x: 140, y: 398 }, width: 320, style: 'boxText' }
+        ],
+        styles: {
+          boxTitle: { fontSize: 13, bold: true, color: '#003a63' },
+          boxTitle2: { fontSize: 13, bold: true, color: '#8a4300' },
+          boxTitle3: { fontSize: 13, bold: true, color: '#1f6f3a' },
+          boxText: { fontSize: 11, color: '#222' }
+        }
+      };
+
+      // Apri il PDF in una nuova finestra/tab (metodo utile per esempi)
+      pdfMake.createPdf(dd).open();
+    }
+  </script>
+</body>
+</html>
