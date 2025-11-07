@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>Charts SVG + pdfmake (Bar + Pie)</title>
+  <!-- ECharts (SVG renderer) -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <!-- pdfMake -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; padding: 2rem; background:#f7f7f7 }
+    .chart-wrap { display:flex; gap:2rem; flex-wrap:wrap }
+    .chart-box { background:white; padding:12px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.08) }
+  .chart { width:640px; height:360px }
+  /* Stile bottone uniforme con gli altri esempi */
+  button { padding: 10px 16px; border-radius: 6px; border: none; background: #0077cc; color: white; font-size: 15px; cursor: pointer; }
+  button:hover { background: #005fa3; }
+    h2 { margin-top:0 }
+    .note { font-size:13px; color:#444 }
+  </style>
+</head>
+<body>
+  <h2>ECharts (SVG) + pdfmake</h2>
+  <p>Prima pagina: grafico a barre + tabella dei dati. Seconda pagina: grafico a torta + tabella dei dati.</p>
+
+  <div class="chart-wrap">
+    <div class="chart-box">
+      <h3>Grafico a barre</h3>
+      <div id="chartBar" class="chart"></div>
+    </div>
+
+    <div class="chart-box">
+      <h3>Grafico a torta</h3>
+      <div id="chartPie" class="chart"></div>
+    </div>
+  </div>
+
+  <p style="margin-top:1rem">
+    <button id="exportPdf">📄 Genera PDF (Bar + Pie)</button>
+  </p>
+
+  <script>
+    // Dati condivisi (usati sia per i grafici che per le tabelle)
+    const categories = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu'];
+    const values = [500, 800, 600, 1000, 750, 900];
+
+    // 1) Inizializza ECharts in modalità SVG per entrambi i grafici
+    const barChart = echarts.init(document.getElementById('chartBar'), null, { renderer: 'svg' });
+    const pieChart = echarts.init(document.getElementById('chartPie'), null, { renderer: 'svg' });
+
+    // Opzione per il grafico a barre
+    const barOption = {
+      title: { text: 'Vendite Mensili', left: 'center' },
+      tooltip: { trigger: 'axis' },
+      xAxis: { type: 'category', data: categories },
+      yAxis: { type: 'value' },
+      series: [{ type: 'bar', data: values, itemStyle: { color: '#0077cc' } }]
+    };
+
+    // Opzione per la torta (convertiamo i dati in array di oggetti)
+    const pieData = categories.map((c, i) => ({ name: c, value: values[i] }));
+    const pieOption = {
+      title: { text: 'Distribuzione Mensile', left: 'center' },
+      tooltip: { trigger: 'item' },
+      // per evitare che la legenda occupi spazio laterale nella versione PDF,
+      // la mettiamo in fondo (orizzontale)
+      legend: { orient: 'horizontal', left: 'center', bottom: 0 },
+      // radius più contenuto per prevenire overlap con la tabella nel PDF
+      series: [{ type: 'pie', radius: '45%', data: pieData }]
+    };
+
+    barChart.setOption(barOption);
+    pieChart.setOption(pieOption);
+
+    // Aiuta a ottenere l'SVG serializzato da un chart ECharts
+    function getChartSvgString(chartInstance){
+      // Assicura che esista l'elemento SVG (renderer: 'svg')
+      const svg = chartInstance.getDom().querySelector('svg');
+      if(!svg) return null;
+      return new XMLSerializer().serializeToString(svg);
+    }
+
+    // Crea il corpo della tabella per pdfMake a partire dai dati
+    function buildTableBody(headers, rows){
+      const body = [];
+      body.push(headers);
+      rows.forEach(r => body.push(r));
+      return body;
+    }
+
+    // Al click, estrai SVG e crea il PDF con due pagine + tabelle
+    
+    document.getElementById('exportPdf').addEventListener('click', () => {
+      // breve delay per sicurezza render
+      setTimeout(() => {
+        const svgBar = getChartSvgString(barChart);
+        const svgPie = getChartSvgString(pieChart);
+
+        if(!svgBar || !svgPie){
+          alert('Impossibile trovare l\'SVG dei grafici. Assicurati che il browser supporti SVG e che i grafici siano già renderizzati.');
+          return;
+        }
+
+        // Tabella dati per il grafico a barre
+        const barHeaders = ['Mese', 'Vendite'];
+        const barRows = categories.map((c, i) => [c, values[i]]);
+
+        // Tabella dati per la torta (stesso formato)
+        const pieHeaders = ['Mese', 'Vendite'];
+        const pieRows = categories.map((c, i) => [c, values[i]]);
+
+        // Documento pdfMake con due pagine
+        const docDefinition = {
+          content: [
+            { text: 'Report: Grafico a Barre', style: 'header' },
+            { text: '\n' },
+            // SVG vettoriale (pdfMake supporta la stringa SVG direttamente)
+            { svg: svgBar, width: 520, alignment: 'center' },
+            { text: '\n' },
+            // Tabella sotto il grafico a barre
+            { text: 'Tabella dati — Grafico a barre', style: 'subheader' },
+            {
+              table: {
+                widths: ['*', 100],
+                body: buildTableBody(barHeaders, barRows)
+              },
+              layout: 'lightHorizontalLines',
+              margin: [0, 8, 0, 0]
+            },
+            { text: '', pageBreak: 'after' },
+
+            // Seconda pagina: torta
+            { text: 'Report: Grafico a Torta', style: 'header' },
+            { text: '\n' },
+            // assegniamo un po' di spazio inferiore all'SVG per evitare sovrapposizioni
+            { svg: svgPie, width: 480, alignment: 'center', margin: [0, 0, 0, 8] },
+            { text: '\n' },
+            { text: 'Tabella dati — Grafico a torta', style: 'subheader' },
+            {
+              table: {
+                widths: ['*', 100],
+                body: buildTableBody(pieHeaders, pieRows)
+              },
+              layout: 'lightHorizontalLines',
+              // margine superiore più grande per separare chiaramente la tabella dalla torta
+              margin: [0, 14, 0, 0]
+            }
+          ],
+          styles: {
+            header: { fontSize: 18, bold: true, alignment: 'center', margin: [0, 0, 0, 6] },
+            subheader: { fontSize: 12, bold: true, margin: [0, 8, 0, 4] }
+          }
+        };
+
+        // Genera il PDF e scaricalo
+        pdfMake.createPdf(docDefinition).open()
+      }, 200);
+    });
+  </script>
+</body>
+</html>
