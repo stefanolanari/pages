@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>ESE S01 - Header con canvas e Footer pagina x di y</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 2rem;
+    }
+    button {
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: none;
+      background: #0077cc;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    button:hover { background: #005fa3; }
+    p.note { color: #555; font-size: 13px }
+  </style>
+</head>
+<body>
+  <h2>Header + Footer e numerazione pagine</h2>
+  <p>Header: tre riquadri disegnati con canvas; Footer: "pagina x di y"; 3 pagine di testo casuale.</p>
+  <button onclick="generaPDF()">Genera PDF</button>
+
+  <script>
+    function generaPDF() {
+      // 🧾 Definizione documento
+      const lorem = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam. Maecenas ligula massa, varius a, semper congue, euismod non, mi.`;
+
+      const dd = {
+        pageMargins: [40, 80, 40, 60], // lascia spazio per header e footer
+        header: function(currentPage, pageCount) {
+          // 🎨 Disegno con canvas: tre rettangoli orizzontali
+          return {
+            margin: [40, 20, 40, 0],
+            canvas: [
+              { type: 'rect', x: 0,   y: 0, w: 140, h: 36, r: 6, color: '#f2a6a6' },
+              { type: 'rect', x: 160, y: 0, w: 140, h: 36, r: 6, color: '#a6d8a8' },
+              { type: 'rect', x: 320, y: 0, w: 140, h: 36, r: 6, color: '#a6c6f2' }
+            ]
+          };
+        },
+        // footer: function(currentPage, pageCount) {        
+        //   return {
+        //     columns: [
+        //       { text: '' },
+        //       { text: 'pagina ' + currentPage + ' di ' + pageCount, alignment: 'center', margin: [0,0,0,6] },
+        //       { text: '' }
+        //     ]
+        //   };
+        // },
+          footer: {            
+              text: 'pagina [currentPage] di [pageCount]',
+              color: 'red',
+              alignment: 'center',
+              margin: [0,0,0,6]            
+          },
+        content: [
+          { text: 'Esempio S01 — Contenuto pagina 1', style: 'title' },
+          { text: Array(8).fill(lorem).join('\n\n'), margin: [0,10,0,0] , fontSize: 11},
+          { text: 'Esempio S01 — Contenuto pagina 2', style: 'title', pageBreak: 'before' },
+          { text: Array(9).fill(lorem).join('\n\n'), margin: [0,10,0,0], fontSize: 11},
+          { text: 'Esempio S01 — Contenuto pagina 3', style: 'title', pageBreak: 'before' },
+          { text: Array(7).fill(lorem).join('\n\n'), margin: [0,10,0,0], fontSize: 11}
+        ],
+        styles: {
+          title: { fontSize: 14, bold: true, margin: [0, 6, 0, 6] }
+        }
+      };
+
+      if (dd.footer) {
+        const originalFooter = dd.footer;
+        dd.footer = function(currentPage, pageCount) {
+          const footerCopy = JSON.parse(JSON.stringify(originalFooter));
+          footerCopy.text = footerCopy.text.replace('[currentPage]', currentPage).replace('[pageCount]', pageCount);          
+          return footerCopy;          
+        };
+      }
+
+      // Genera e apre il PDF
+      pdfMake.createPdf(dd).open();
+    }
+  </script>
+</body>
+</html>
