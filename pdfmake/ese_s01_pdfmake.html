@@ -56,7 +56,7 @@
         //   };
         // },
           footer: {            
-              text: 'pagina [currentPage] di [pageCount]',
+              text: 'pagina [NumPag] di [PageCount]',
               color: 'red',
               alignment: 'center',
               margin: [0,0,0,6]            
@@ -78,7 +78,7 @@
         const originalFooter = dd.footer;
         dd.footer = function(currentPage, pageCount) {
           const footerCopy = JSON.parse(JSON.stringify(originalFooter));
-          footerCopy.text = footerCopy.text.replace('[currentPage]', currentPage).replace('[pageCount]', pageCount);          
+          footerCopy.text = footerCopy.text.replace('[NumPag]', currentPage).replace('[PageCount]', pageCount);          
           return footerCopy;          
         };
       }
