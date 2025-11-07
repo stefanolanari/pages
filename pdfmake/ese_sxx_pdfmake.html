@@ -24,18 +24,7 @@
   <h2>ECharts (SVG) + pdfmake</h2>
   <p>Prima pagina: grafico a barre + tabella dei dati. Seconda pagina: grafico a torta + tabella dei dati.</p>
 
-  <div class="chart-wrap">
-    <div class="chart-box">
-      <h3>Grafico a barre</h3>
-      <div id="chartBar" class="chart"></div>
-    </div>
-
-    <div class="chart-box">
-      <h3>Grafico a torta</h3>
-      <div id="chartPie" class="chart"></div>
-    </div>
-  </div>
-
+  <!-- Solo il bottone visibile: i container dei grafici vengono creati dinamicamente al click -->
   <p style="margin-top:1rem">
     <button id="exportPdf">📄 Genera PDF (Bar + Pie)</button>
   </p>
@@ -45,14 +34,30 @@
     const categories = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu'];
     const values = [500, 800, 600, 1000, 750, 900];
 
-    // 1) Inizializza ECharts in modalità SVG per entrambi i grafici
-    const barChart = echarts.init(document.getElementById('chartBar'), null, { renderer: 'svg' });
-    const pieChart = echarts.init(document.getElementById('chartPie'), null, { renderer: 'svg' });
+    // Funzione helper per creare un container off-screen per il rendering SVG
+    function createHiddenContainer(id, width = 640, height = 360){
+      const d = document.createElement('div');
+      d.id = id;
+      // Posizioniamo il container fuori dallo schermo in modo che il browser ne calcoli comunque le dimensioni
+      // Use position:fixed + top negative to avoid layout reflow issues and set visibility:hidden so it's measurable
+      d.style.position = 'fixed';
+      d.style.left = '0px';
+      d.style.top = '-10000px';
+      d.style.width = width + 'px';
+      d.style.height = height + 'px';
+      d.style.visibility = 'hidden';
+      d.style.display = 'block';
+      document.body.appendChild(d);
+      return d;
+    }
 
     // Opzione per il grafico a barre
     const barOption = {
       title: { text: 'Vendite Mensili', left: 'center' },
       tooltip: { trigger: 'axis' },
+      // aggiungiamo un grid con containLabel per lasciare spazio alle etichette e assicurarci
+      // che le barre non tocchino il bordo destro (previene clipping)
+      grid: { left: '8%', right: '8%', top: '12%', bottom: '12%', containLabel: true },
       xAxis: { type: 'category', data: categories },
       yAxis: { type: 'value' },
       series: [{ type: 'bar', data: values, itemStyle: { color: '#0077cc' } }]
@@ -70,12 +75,9 @@
       series: [{ type: 'pie', radius: '45%', data: pieData }]
     };
 
-    barChart.setOption(barOption);
-    pieChart.setOption(pieOption);
 
     // Aiuta a ottenere l'SVG serializzato da un chart ECharts
     function getChartSvgString(chartInstance){
-      // Assicura che esista l'elemento SVG (renderer: 'svg')
       const svg = chartInstance.getDom().querySelector('svg');
       if(!svg) return null;
       return new XMLSerializer().serializeToString(svg);
@@ -92,70 +94,80 @@
     // Al click, estrai SVG e crea il PDF con due pagine + tabelle
     
     document.getElementById('exportPdf').addEventListener('click', () => {
-      // breve delay per sicurezza render
-      setTimeout(() => {
-        const svgBar = getChartSvgString(barChart);
-        const svgPie = getChartSvgString(pieChart);
+  // Creiamo dinamicamente i container nascosti per i grafici (fuori schermo)
+  // per il grafico a barre usiamo un container più largo per evitare clipping dei bordi
+  const barContainer = createHiddenContainer('chartBar_dynamic', 680, 360);
+  const pieContainer = createHiddenContainer('chartPie_dynamic', 680, 360);
 
-        if(!svgBar || !svgPie){
-          alert('Impossibile trovare l\'SVG dei grafici. Assicurati che il browser supporti SVG e che i grafici siano già renderizzati.');
-          return;
-        }
+      // Inizializza i grafici qui (solo nel DOM temporaneo)
+      const barChart = echarts.init(barContainer, null, { renderer: 'svg' });
+      const pieChart = echarts.init(pieContainer, null, { renderer: 'svg' });
 
-        // Tabella dati per il grafico a barre
-        const barHeaders = ['Mese', 'Vendite'];
-        const barRows = categories.map((c, i) => [c, values[i]]);
+  barChart.setOption(barOption);
+  pieChart.setOption(pieOption);
+  // Forza il resize dopo aver impostato le opzioni in modo che ECharts calcoli correttamente width/height e viewBox
+  try{ barChart.resize(); }catch(e){}
+  try{ pieChart.resize(); }catch(e){}
 
-        // Tabella dati per la torta (stesso formato)
-        const pieHeaders = ['Mese', 'Vendite'];
-        const pieRows = categories.map((c, i) => [c, values[i]]);
+  // Attendi un periodo per sicurezza affinché ECharts completi il render SVG (timeout aumentato)
+  setTimeout(() => {
+        try{
+          const svgBar = getChartSvgString(barChart);
+          const svgPie = getChartSvgString(pieChart);
 
-        // Documento pdfMake con due pagine
-        const docDefinition = {
-          content: [
-            { text: 'Report: Grafico a Barre', style: 'header' },
-            { text: '\n' },
-            // SVG vettoriale (pdfMake supporta la stringa SVG direttamente)
-            { svg: svgBar, width: 520, alignment: 'center' },
-            { text: '\n' },
-            // Tabella sotto il grafico a barre
-            { text: 'Tabella dati — Grafico a barre', style: 'subheader' },
-            {
-              table: {
-                widths: ['*', 100],
-                body: buildTableBody(barHeaders, barRows)
-              },
-              layout: 'lightHorizontalLines',
-              margin: [0, 8, 0, 0]
-            },
-            { text: '', pageBreak: 'after' },
-
-            // Seconda pagina: torta
-            { text: 'Report: Grafico a Torta', style: 'header' },
-            { text: '\n' },
-            // assegniamo un po' di spazio inferiore all'SVG per evitare sovrapposizioni
-            { svg: svgPie, width: 480, alignment: 'center', margin: [0, 0, 0, 8] },
-            { text: '\n' },
-            { text: 'Tabella dati — Grafico a torta', style: 'subheader' },
-            {
-              table: {
-                widths: ['*', 100],
-                body: buildTableBody(pieHeaders, pieRows)
-              },
-              layout: 'lightHorizontalLines',
-              // margine superiore più grande per separare chiaramente la tabella dalla torta
-              margin: [0, 14, 0, 0]
-            }
-          ],
-          styles: {
-            header: { fontSize: 18, bold: true, alignment: 'center', margin: [0, 0, 0, 6] },
-            subheader: { fontSize: 12, bold: true, margin: [0, 8, 0, 4] }
+          if(!svgBar || !svgPie){
+            alert('Impossibile ottenere l\'SVG dai grafici generati.');
+            return;
           }
-        };
 
-        // Genera il PDF e scaricalo
-        pdfMake.createPdf(docDefinition).open()
-      }, 200);
+          const barHeaders = ['Mese', 'Vendite'];
+          const barRows = categories.map((c, i) => [c, values[i]]);
+
+          const pieHeaders = ['Mese', 'Vendite'];
+          const pieRows = categories.map((c, i) => [c, values[i]]);
+
+          const docDefinition = {
+            content: [
+              { text: 'Report: Grafico a Barre', style: 'header' },
+              { text: '\n' },
+              // usiamo una width ampia per il PDF che rispetti il container SVG generato
+              { svg: svgBar, width: 680, alignment: 'center' },
+              { text: '\n' },
+              { text: 'Tabella dati — Grafico a barre', style: 'subheader' },
+              {
+                table: { widths: ['*', 100], body: buildTableBody(barHeaders, barRows) },
+                layout: 'lightHorizontalLines',
+                margin: [0, 8, 0, 0]
+              },
+              { text: '', pageBreak: 'after' },
+
+              { text: 'Report: Grafico a Torta', style: 'header' },
+              { text: '\n' },
+              { svg: svgPie, width: 680, alignment: 'center', margin: [0, 0, 0, 8] },
+              { text: '\n' },
+              { text: 'Tabella dati — Grafico a torta', style: 'subheader' },
+              {
+                table: { widths: ['*', 100], body: buildTableBody(pieHeaders, pieRows) },
+                layout: 'lightHorizontalLines',
+                margin: [0, 14, 0, 0]
+              }
+            ],
+            styles: {
+              header: { fontSize: 18, bold: true, alignment: 'center', margin: [0, 0, 0, 6] },
+              subheader: { fontSize: 12, bold: true, margin: [0, 8, 0, 4] }
+            }
+          };
+
+          // Genera il PDF (aperto in una nuova finestra/tab)
+          pdfMake.createPdf(docDefinition).open();
+        } finally {
+          // Pulizia: rimuovi i chart e i container temporanei
+          try{ barChart.dispose(); }catch(e){}
+          try{ pieChart.dispose(); }catch(e){}
+          if(barContainer && barContainer.parentNode) barContainer.parentNode.removeChild(barContainer);
+          if(pieContainer && pieContainer.parentNode) pieContainer.parentNode.removeChild(pieContainer);
+        }
+      }, 300);
     });
   </script>
 </body>
