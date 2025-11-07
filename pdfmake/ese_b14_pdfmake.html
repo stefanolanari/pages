@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>pdfmake - ESE_B14 QR Code</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 2rem;
+    }
+    button {
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: none;
+      background: #0077cc;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    button:hover { background: #005fa3; }
+  </style>
+</head>
+<body>
+  <h2>ESE_B14 - QR Codes</h2>
+  <p>Questo esempio mostra due QR code affiancati; sotto ogni QR è mostrato il link corrispondente cliccabile.</p>
+  <button onclick="generaPDF()">Genera PDF</button>
+
+  <script>
+    function generaPDF() {
+      const dd = {
+        pageSize: 'A4',
+        pageMargins: [36, 36, 36, 40],
+        // Usa il font Roboto fornito da vfs_fonts
+        defaultStyle: { fontSize: 10, font: 'Roboto' },
+
+        styles: {
+          title: { bold: true, fontSize: 13 },
+          qrLabel: { fontSize: 10, color: '#0077cc' },
+          note: { fontSize: 9, italics: true, color: '#666' }
+        },
+
+        content: [
+          { text: 'Esempio ESE_B14 - QR Code e link', style: 'title', margin: [0, 0, 0, 8] },
+
+          // Riga con i due QR code affiancati (larghezze uguali, fit identico)
+          {
+            // uso larghezze equilibrate per evitare differenze di layout
+            columns: [
+              {
+                width: '*',
+                stack: [
+                  { qr: 'https://www.smeup.com', fit: 140 },
+                  { text: 'www.smeup.com', link: 'https://www.smeup.com', style: 'qrLabel', alignment: 'center', margin: [0,6,0,0] }
+                ],
+                alignment: 'center'
+              },
+
+              { width: 20, text: '' }, // spazio fisso tra i QR
+
+              {
+                width: '*',
+                stack: [
+                  { qr: 'https://kokoslab.smeup.com', fit: 140 },
+                  { text: 'kokoslab.smeup.com', link: 'https://kokoslab.smeup.com/web', style: 'qrLabel', alignment: 'center', margin: [0,6,0,0] }
+                ],
+                alignment: 'center'
+              }
+            ],
+            columnGap: 10,
+            margin: [0, 12, 0, 0]
+          },
+
+          { text: '\n', margin: [0,8,0,0] },
+          { text: 'Nota: i link sotto i QR sono cliccabili quando il PDF viene visualizzato in un reader che supporta i link HTTP.', style: 'note' }
+        ]
+      };
+
+      pdfMake.createPdf(dd).open();
+    }
+  </script>
+</body>
+</html>
