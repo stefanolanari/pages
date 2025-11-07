@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>pdfmake - ESE_MAX Riproduzione Scheda</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; padding: 2rem; }
+    button { padding: 10px 18px; border-radius: 6px; border: none; background: #0077cc; color: white; font-size: 15px; cursor: pointer; }
+    button:hover { background: #005fa3; }    
+  </style>
+</head>
+<body>
+  <h2>Riproduzione scheda prodotto</h2>
+  <button onclick="generaPDF()">Genera PDF</button>
+
+  <script>
+    // Layout per le singole celle con bordo spesso (usato per simulare le caselle dell'immagine)
+    const boxLayout = {
+      hLineWidth: function(i, node) { return 2; },
+      vLineWidth: function(i, node) { return 2; },
+      hLineColor: function(i, node) { return '#000'; },
+      vLineColor: function(i, node) { return '#000'; },
+      paddingLeft: function(i, node) { return 6; },
+      paddingRight: function(i, node) { return 6; },
+      paddingTop: function(i, node) { return 8; },
+      paddingBottom: function(i, node) { return 8; }
+    };
+
+    function smallBox(label) {
+      return {
+        table: { widths: ['*'], body: [[{ text: label, alignment: 'center', bold: true }]] },
+        layout: boxLayout
+      };
+    }
+
+    function labeledBox(labelAbove, valueText, opts = {}){
+      // opts: width, fillColor, valueStyle
+      return {
+        stack: [
+          { text: labelAbove, fontSize: 9, margin: [0,0,0,4] },
+          { table: { widths: ['*'], body: [[{ text: valueText, alignment: 'center', bold: opts.bold || false, fontSize: opts.fontSize || 12 }]] }, layout: boxLayout }
+        ],
+        width: opts.width || '*'
+      };
+    }
+
+    // Altezza fissa per le 4 caselle in alto (CO.ANN, CO.NUME, CO.RI, CO.DDT)
+    // Cambia questo valore se vuoi aumentare/diminuire l'altezza delle caselle
+    function generaPDF(){
+      const dd = {
+        pageSize: 'A4',
+        pageMargins: [28, 28, 28, 28],
+        defaultStyle: { font: 'Roboto', fontSize: 10 },
+
+        content: [
+          // Header title (simile a "SCHEDA IDENTIFICAZIONE PRODOTTO")
+          { text: 'SCHEDA IDENTIFICAZIONE PRODOTTO', alignment: 'center', bold: true, fontSize: 16, margin: [0,0,0,6] },
+
+          // prima riga: grandi tre caselle a sinistra e casella DDT a destra
+          {
+            table: {
+              widths: ['auto','auto','2*','*','145'],
+              body: [
+                [
+                  // CO.ANN
+                  { stack: [ { text: 'Rif. Ricezione', fontSize:9, margin:[6,0,0,6] }, { table: { widths:['*'], body: [[{ text: 'CO.ANN', bold:true, fontSize:20, alignment:'center' }]] }, layout: boxLayout } ], border: [false,false,false,false] },
+
+                  // CO.NUME
+                  { stack: [ { text: ' ', fontSize:9, margin:[6,0,0,6] }, { table: { widths:['*'], body: [[{ text: 'CO.NUME', bold:true, fontSize:20, alignment:'center' }]] }, layout: boxLayout } ] },
+
+                  // CO.RI
+                  { stack: [ { text: ' ', fontSize:9, margin:[6,0,0,6] }, { table: { widths:['*'], body: [[{ text: 'CO.RI', bold:true, fontSize:20, alignment:'center' }]] }, layout: boxLayout } ] },
+
+                  {text: ' '},                  
+
+                  // CO.DDT (Bolla n°)
+                  { stack: [ { text: 'Bolla n°', fontSize:9, margin:[0,0,6,6], alignment: 'left' }, { table: { widths:[120], body: [[{ text: 'CO.DDT', bold:true, fontSize:20, alignment:'center' }]] }, layout: boxLayout } ], alignment: 'right' }
+                ]
+              ]
+            },
+            layout: { hLineWidth: function(i){ return 0; }, vLineWidth: function(i){ return 0; } },
+            margin: [0,6,0,6]
+          },
+
+          // Cliente - full width box
+          {
+            stack: [ { text: 'Cliente', fontSize:9, margin:[0,0,0,6] }, { table: { widths: ['*'], body: [[{ text: 'CO.CLIE', bold:true, fontSize:20, alignment:'center' }]] }, layout: boxLayout } ],
+            margin: [0,6,0,6]
+          },
+
+          // Row: Data Emissione | Data Ricevimento | CONSEGNARE IL (shaded) | CONSEGNA RICHIESTA IL (shaded)
+          {
+            columns: [
+              labeledBox('Data Emissione', 'CO.DTEM', { width:100 }),
+              labeledBox('Data Ricevimento', 'CO.DTRI', { width:100 }),
+              labeledBox('CONSEGNARE IL', 'CO.DTCO', { width: 160, bold:true }),
+              labeledBox('CONSEGNA RICHIESTA IL', 'CO.CORI', { width: 160, bold:true })
+            ],
+            columnGap: 8,
+            margin: [0,8,0,8]
+          },
+
+          // N'ordine cliente | Colata
+          {
+            table: {
+              widths: ['*', 220],
+              body: [
+                [
+                  { stack: [ { text:'N°ordine cliente', fontSize:9, margin:[6,0,0,6] }, { table:{ widths:['*'], body:[[ { text:'CO.ORCL', fontSize:12 } ]] }, layout: boxLayout } ] },
+                  { stack: [ { text:'Colata', fontSize:9, margin:[6,0,0,6] }, { table:{ widths:['*'], body:[[ { text:'CO.COLA', fontSize:12 } ]] }, layout: boxLayout } ] }
+                ]
+              ]
+            },
+            layout: { hLineWidth: function(i){ return 0; }, vLineWidth: function(i){ return 0; } },
+            margin: [0,6,0,6]
+          },
+
+          // Lotto | Disegno (center bold) | Specifica Az | N°codice
+          {
+            table: {
+              widths: [120, '*', 160, 120],
+              body: [
+                [
+                  { stack:[ { text:'Lotto', fontSize:9, margin:[6,0,0,6] }, { table:{ widths:['*'], body:[[ { text:'CO.LOTT', fontSize:12 } ]] }, layout: boxLayout } ] },
+                  { stack:[ { text:'Disegno', fontSize:9, margin:[6,0,0,6] }, { table:{ widths:['*'], body:[[ { text:'CO.DISE', bold:true, fontSize:14, alignment:'center' } ]] }, layout: boxLayout } ] },
+                  { stack:[ { text:'Specifica Az', fontSize:9, margin:[6,0,0,6] }, { table:{ widths:['*'], body:[[ { text:'CO.SPEC', fontSize:12 } ]] }, layout: boxLayout } ] },
+                  { stack:[ { text:'N°codice', fontSize:9, margin:[6,0,0,6] }, { table:{ widths:['*'], body:[[ { text:'CO.CODI', fontSize:12 } ]] }, layout: boxLayout } ] }
+                ]
+              ]
+            },
+            layout: { hLineWidth: function(i){ return 0; }, vLineWidth: function(i){ return 0; } },
+            margin: [0,6,0,6]
+          },
+
+          // Articolo - grande box
+          {
+            stack: [ { text: 'Articolo', fontSize:9, margin:[0,0,0,6] }, { table: { widths: ['*'], body: [[{ text: 'CO.ARTI', bold:true, fontSize:18, alignment:'center' }]] }, layout: boxLayout } ],
+            margin: [0,12,0,6]
+          },
+
+          // Piccole note di footer
+          { text: '\n', margin:[0,4,0,4] },
+          { text: 'Nota: barcode e logo rimossi; layout creato con tabelle per riprodurre fedelmente la scheda.', style: 'note' }
+        ],
+
+        styles: {
+          note: { italics: true, fontSize: 9, color: '#666' }
+        }
+
+      };
+
+      pdfMake.createPdf(dd).open();
+    }
+  </script>
+</body>
+</html>
