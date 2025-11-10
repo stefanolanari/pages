@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>Esempio Fonts: Roboto e Courier</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>  
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 2rem;
+    }
+    button {
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: none;
+      background: #0077cc;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    button:hover { background: #005fa3; }
+    table.preview { border-collapse: collapse; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <h2>Esempio Font — Roboto e Courier (URL)</h2>
+  <p>Tabella a due colonne: nella prima colonna il nome del font e l'attributo (normal, italic, bold, bold italic), nella seconda un testo di esempio con lo stile corrispondente.</p>
+  <button onclick="generaPDF()">Genera PDF</button>
+
+  <script>
+    function generaPDF() {
+      // Testo casuale da mostrare negli esempi
+      const sample = 'Questo è un testo di esempio generato casualmente per mostrare lo stile del font.';
+
+      const dd = {
+        pageSize: 'A4',
+        pageMargins: [40, 40, 40, 40],
+        content: [
+          { text: 'Esempio di font e varianti', fontSize: 16, bold: true, margin: [0, 0, 0, 10] },
+
+          // Tabella 2 colonne
+          {
+            table: {
+              widths: [110, '*'],
+              body: [
+                [ { text: 'Font e attributo', bold: true }, { text: 'Esempio', bold: true } ],
+
+                // Roboto
+                [ 'Roboto — Normal', { text: sample, font: 'Roboto', fontSize: 11 } ],
+                [ 'Roboto — Italic', { text: sample, font: 'Roboto', fontSize: 11, italics: true } ],
+                [ 'Roboto — Bold', { text: sample, font: 'Roboto', fontSize: 11, bold: true } ],
+                [ 'Roboto — Bold Italic', { text: sample, font: 'Roboto', fontSize: 11, bold: true, italics: true } ],
+
+                // Courier
+                [ 'Courier — Normal', { text: sample, font: 'Courier', fontSize: 11 } ],
+                [ 'Courier — Italic', { text: sample, font: 'Courier', fontSize: 11, italics: true } ],
+                [ 'Courier — Bold', { text: sample, font: 'Courier', fontSize: 11, bold: true } ],
+                [ 'Courier — Bold Italic', { text: sample, font: 'Courier', fontSize: 11, bold: true, italics: true } ]
+              ]
+            },
+            layout: 'lightHorizontalLines',
+            margin: [0, 10, 0, 0]
+          }
+        ],
+
+        // Definizioni di stile/globali se necessario
+        defaultStyle: {
+          // lascia Roboto come default se disponibile
+          font: 'Roboto'
+        }
+      };
+
+      pdfMake.fonts = {
+        Roboto: {
+          normal: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf',
+          bold: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Medium.ttf',
+          italics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Italic.ttf',
+          bolditalics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-MediumItalic.ttf'
+        },
+        Courier: {
+          normal: 'https://stefanolanari.github.io/pages/pdfmake/fonts/Courier.ttf',
+          bold: 'https://stefanolanari.github.io/pages/pdfmake/fonts/Courier-Bold.ttf',
+          italics: 'https://stefanolanari.github.io/pages/pdfmake/fonts/Courier-Italic.ttf',
+          bolditalics: 'https://stefanolanari.github.io/pages/pdfmake/fonts/Courier-BoldItalic.ttf'
+        }
+      };
+
+      // Genera e apre il PDF
+      pdfMake.createPdf(dd).open();
+    }
+  </script>
+</body>
+</html>
