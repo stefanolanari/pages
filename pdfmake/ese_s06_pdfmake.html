@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>Esempio S06 - Header condizionali su 6 pagine</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; padding: 2rem; }
+    button { padding: 10px 18px; border-radius: 6px; border: none; background: #0077cc; color: white; font-size: 15px; cursor: pointer; }
+    button:hover { background: #005fa3; }
+    h2 { margin-bottom: 0.5rem; }
+    p.note { color: #555; }
+  </style>
+</head>
+<body>
+  <h2>Esempio S06 — Header condizionali (6 pagine)</h2>
+  <p>Questo esempio mostra 6 pagine generate con PDFMake. Ci sono 3 header diversi: primo, intermedio e ultimo.</p>
+  <button onclick="generaPDF()">Genera PDF</button>
+
+  <script>
+    // 🎨 Funzioni helper per parser JSON condizionale header/footer
+    function _applyPlaceholders(obj, currentPage, pageCount) {
+      // Serializza, sostituisce token semplici e deserializza
+      const s = JSON.stringify(obj);
+      const replaced = s
+        .replace(/{{\s*page\s*}}/g, String(currentPage))
+        .replace(/{{\s*pages\s*}}/g, String(pageCount));
+      return JSON.parse(replaced);
+    }
+
+    function _evaluateCondition(cond, currentPage, pageCount) {
+      // `when` deve essere una stringa-espressione che usa `page` e `pages`.
+      // NOTA: per motivi di semplicità ora NON supportiamo range oggetto né confronti con '<' o '>'.
+      if (!cond) return false;
+
+      if (typeof cond === 'string') {
+        // Reject expressions containing '<' or '>' as requested
+        if (/[<>]/.test(cond)) {
+          console.warn('Condizione non supportata (caratteri < o >):', cond);
+          return false;
+        }
+        try {
+          // ATTENZIONE: Sostituire Function con altro in quanto potrebbe non funzionare in ambienti con restrizioni di sicurezza.
+          const fn = new Function('page', 'pages', 'return !!(' + cond + ')');
+          return !!fn(currentPage, pageCount);
+        } catch (e) {
+          console.warn('Errore valutando espressione condizione:', cond, e);
+          return false;
+        }
+      }
+
+      // Non supportiamo altri tipi (es. range oggetto)
+      return false;
+    }
+
+    function _chooseVariant(variants, currentPage, pageCount) {
+      if (!Array.isArray(variants)) return null;
+      for (let v of variants) {
+        if (_evaluateCondition(v.when, currentPage, pageCount)) return v;
+      }
+      return null;
+    }
+
+    function buildPdfMakeHeaderFooterFromJson(jsonTemplate) {
+      if (!jsonTemplate) return null;
+      if (jsonTemplate.type === 'static') return jsonTemplate.content;
+
+      // Supporto per template condizionale: se è presente 'variants' la trattiamo come condizionale
+      if (Array.isArray(jsonTemplate.variants)) {
+        return function(currentPage, pageCount, pageSize) {
+          const variant = _chooseVariant(jsonTemplate.variants, currentPage, pageCount) || null;
+          const base = variant || {};
+          const contentRaw = base.content || [];
+          const content = _applyPlaceholders(contentRaw, currentPage, pageCount);
+
+          const wrapper = {};
+          if (base.margin) wrapper.margin = base.margin;
+          if (base.style) wrapper.style = base.style;
+
+          if (Array.isArray(content)) {
+            if (Object.keys(wrapper).length === 0) return content;
+            return Object.assign({ stack: content }, wrapper);
+          } else {
+            return Object.assign({}, content, wrapper);
+          }
+        };
+      }    
+
+      return null;
+    }
+
+    // 🎯 Funzione che genera il PDF con 6 pagine usando header/footer descritti in JSON
+    function generaPDF() {
+      const lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus luctus urna sed urna ultricies ac tempor dui sagittis. In condimentum facilisis porta. Sed nec diam eu diam mattis viverra. ";
+
+            
+      const dd = {
+        pageSize: 'A4',
+        pageMargins: [40, 80, 40, 60],
+        header: {
+            variants: [
+                {
+                    when: 'page === 1',
+                    content: [ { text: 'Header Prima Pagina', alignment: 'center', margin: [0, 10, 0, 0] } ],
+                    style: 'hFirst'
+                },
+                {
+                    when: 'page === pages',
+                    content: [ { text: 'Header Ultima Pagina', alignment: 'center', margin: [0, 10, 0, 0] } ],
+                    style: 'hLast'
+                },          
+                {
+                    when: 'true',
+                    content: [ { text: 'Header di default', alignment: 'center' } ],
+                    style: 'hMidRight'
+                },          
+            ],                    
+        },
+
+        // Contenuto: 6 pagine con elementi diversi
+        content: [
+          // Pagina 1
+          { text: 'Pagina 1 — Introduzione', style: 'pageTitle' },
+          { text: lorem.repeat(8), margin: [0, 10, 0, 0] , fontSize: 11},
+          { text: '\n', pageBreak: 'after' },
+
+          // Pagina 2
+          { text: 'Pagina 2 — Lista puntata', style: 'pageTitle' },
+          { ul: [ 'Punto uno: descrizione casuale', 'Punto due: valore di esempio', 'Punto tre: altro testo' ], margin: [0, 6, 0, 0] },
+          { text: '\n', pageBreak: 'after' },
+
+          // Pagina 3
+          { text: 'Pagina 3 — Colonne', style: 'pageTitle' },
+          {
+            columns: [
+              { width: '50%', text: lorem.repeat(4), margin: [0,6,10,0] },
+              { width: '50%', text: lorem.repeat(3), margin: [10,6,0,0] }
+            ]
+          },
+          { text: '\n', pageBreak: 'after' },
+
+          // Pagina 4
+          { text: 'Pagina 4 — Tabella dimostrativa', style: 'pageTitle' },
+          {
+            style: 'tableExample',
+            table: {
+              widths: [ '*', 'auto', 100, '*' ],
+              body: [
+                [ { text: 'Nome', bold: true }, { text: 'Quantità', bold: true }, { text: 'Prezzo', bold: true }, { text: 'Totale', bold: true } ],
+                [ 'Mela', '12', '€ 0.80', '€ 9.60' ],
+                [ 'Banana', '8', '€ 0.60', '€ 4.80' ],
+                [ 'Pesca', '5', '€ 1.20', '€ 6.00' ]
+              ]
+            },
+            layout: 'lightHorizontalLines',
+            margin: [0,6,0,0]
+          },
+          { text: '\n', pageBreak: 'after' },
+
+          // Pagina 5
+          { text: 'Pagina 5 — Citazioni e note', style: 'pageTitle' },
+          { text: '“La semplicità è la massima sofisticazione.” — frase di esempio', italics: true, margin: [0,6,0,0] },
+          { text: lorem.repeat(2), margin: [0,6,0,0] },
+          { text: '\n', pageBreak: 'after' },
+
+          // Pagina 6 (ultima)
+          { text: 'Pagina 6 — Conclusione', style: 'pageTitle' },
+          { text: 'Grazie per aver esaminato questo esempio. Questo è l’header dedicato all\'ultima pagina.', margin: [0,6,0,0] },
+          { text: lorem.repeat(2), margin: [0,6,0,0] }
+        ],
+
+        // Stili
+        styles: {
+          pageTitle: { fontSize: 16, bold: true, margin: [0, 0, 0, 6] },
+          hFirst: { fontSize: 13, bold: true },
+          hLast: { fontSize: 13, bold: true },
+          hMidLeft: { fontSize: 10 },
+          hMidRight: { fontSize: 10 }
+        }
+      };
+
+      if (dd.header?.variants) {
+        dd.header = buildPdfMakeHeaderFooterFromJson(dd.header);
+      }
+
+      // Genera e apre il PDF
+      pdfMake.createPdf(dd).open();
+    }
+  </script>
+</body>
+</html>
