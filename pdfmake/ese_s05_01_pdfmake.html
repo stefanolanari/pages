@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>Esempio S05_01 - Tabella multi-pagina senza bordi con celle formattate in modo casuale</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="fonts/vfs_fonts.min.js"></script>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; padding: 2rem; }
+    button { padding: 10px 18px; border-radius: 6px; border: none; background: #0077cc; color: white; font-size: 15px; cursor: pointer; }
+    button:hover { background: #005fa3; }
+  </style>
+</head>
+<body>
+  <h2>Esempio S05_01 — Tabella multi-pagina senza bordi</h2>
+  <p>Premi il pulsante per generare il PDF. La tabella ha 4 colonne, header grigio con testo nero. Le colonne 3 e 4 hanno colori di sfondo e primo piano casuali; la tabella scorre su più pagine.</p>
+  <button onclick="generaPDF()">Genera PDF</button>
+
+  <script>
+    // 🎨 Funzione helper: genera un colore esadecimale casuale
+    function coloreCasuale() {
+      const r = Math.floor(Math.random() * 256);
+      const g = Math.floor(Math.random() * 256);
+      const b = Math.floor(Math.random() * 256);
+      return '#' + [r,g,b].map(x => x.toString(16).padStart(2,'0')).join('');
+    }
+
+    // 🎯 Genera PDFMake document definition
+    function generaPDF() {
+      // 🧾 Prepariamo la body della tabella
+      const body = [];
+
+      // Intestazione (header) - rimane ripetuta sulle pagine
+      body.push([
+        { text: 'Colonna 1', fillColor: '#d3d3d3', color: '#000000', bold: true },
+        { text: 'Colonna 2', fillColor: '#d3d3d3', color: '#000000', bold: true },
+        { text: 'Colonna 3', fillColor: '#d3d3d3', color: '#000000', bold: true },
+        { text: 'Colonna 4', fillColor: '#d3d3d3', color: '#000000', bold: true }
+      ]);
+
+      // Numero di righe sufficienti per forzare overflow su pagina successiva
+      const numeroRighe = 120;
+      for (let i = 1; i <= numeroRighe; i++) {
+        // Colori casuali per colonna 3
+        const bg3 = coloreCasuale();
+        const fg3 = Math.random() > 0.5 ? '#000000' : '#ffffff';
+
+        // Colori casuali per colonna 4
+        const bg4 = coloreCasuale();
+        const fg4 = Math.random() > 0.5 ? '#000000' : '#ffffff';
+
+        body.push([
+          { text: 'R' + i + ' C1' },
+          { text: 'R' + i + ' C2' },
+          { text: 'R' + i + ' C3', fillColor: bg3, color: fg3 },
+          { text: 'R' + i + ' C4', fillColor: bg4, color: fg4 }
+        ]);
+      }
+
+      // 📄 Document Definition
+      const dd = {
+        pageMargins: [40, 60, 40, 60],
+        content: [
+          { text: 'Tabella senza bordi (4 colonne)', style: 'title', margin: [0, 0, 0, 8] },
+          {
+            table: {
+              headerRows: 1,
+              widths: ['*', '*', '*', '*'],
+              body: body
+            },
+            // Rimuoviamo bordi (layout noBorders)
+            layout: 'noBorders'
+          }
+        ],
+        styles: {
+          title: { fontSize: 14, bold: true }
+        },
+        // Footer con linea nera e numero pagina a destra
+        footer: function(currentPage, pageCount) {
+          return {
+            margin: [40, 0, 40, 10],
+            stack: [
+              // linea nera
+              { canvas: [ { type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1, color: '#000000' } ] },
+              // numero pagina a destra
+              { columns: [ { text: '' }, { text: `Pagina: ${currentPage} di ${pageCount}`, alignment: 'right', margin: [0, 4, 0, 0] } ] }
+            ]
+          };
+        }
+      };
+
+      // 📤 Creiamo e apriamo il PDF
+      pdfMake.createPdf(dd).open();
+    }
+  </script>
+</body>
+</html>

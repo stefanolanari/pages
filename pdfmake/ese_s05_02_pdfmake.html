@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>Esempio S05_02 - Tabella raggruppata con subtotali e totale complessivo</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="fonts/vfs_fonts.min.js"></script>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; padding: 2rem; }
+    button { padding: 10px 18px; border-radius: 6px; border: none; background: #0077cc; color: white; font-size: 15px; cursor: pointer; }
+    button:hover { background: #005fa3; }
+    .note { color: #444; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <h2>Esempio S05_02 — Tabella raggruppata con subtotali e totale complessivo</h2>
+  <p class="note">Premi il pulsante per generare il PDF. La tabella ha 4 colonne; la prima colonna è il campo di raggruppamento — dopo ogni gruppo viene mostrata la riga dei subtotali e in fondo la riga del totale complessivo. I dati sono numerosi per generare più pagine.</p>
+  <button onclick="generaPDF()">Genera PDF</button>
+
+  <script>
+    // 🎯 Costruisce e mostra il PDF con tabella raggruppata
+    function generaPDF() {
+      // Definiamo i gruppi (saranno ripetuti ciclicamente)
+      const gruppi = ['Gruppo A', 'Gruppo B', 'Gruppo C', 'Gruppo D'];
+
+      // Numero di righe per forzare più pagine
+      const numeroRighe = 50; // abbastanza grande da occupare più pagine
+
+      // Prepariamo i dati in memoria e calcoliamo subtotali
+      // Creiamo blocchi contigui per ogni gruppo (Gruppo A seguito da A..., poi B..., ecc.)
+      const righe = [];
+      let idx = 1;
+      const gruppiCount = gruppi.length;
+      const basePerGroup = Math.floor(numeroRighe / gruppiCount);
+      const remainder = numeroRighe % gruppiCount; // distribuiamo il resto ai primi gruppi
+      for (let g = 0; g < gruppiCount; g++) {
+        const count = basePerGroup + (g < remainder ? 1 : 0);
+        const gruppoName = gruppi[g];
+        for (let j = 0; j < count; j++) {
+          // valore deterministico per riproducibilità
+          const valore = ((idx * 13) % 97) + 3 + ((idx % 10) / 10);
+          righe.push({ gruppo: gruppoName, descr: `Voce ${idx}`, alt: `Info ${idx}`, valore: parseFloat(valore.toFixed(2)) });
+          idx++;
+        }
+      }
+
+      // Costruiamo la body della tabella con header, righe, subtotali per gruppo e totale complessivo
+      const body = [];
+
+      // Header (verrà ripetuto sulle pagine grazie a headerRows: 1)
+      body.push([
+        { text: 'Gruppo', style: 'tableHeader' },
+        { text: 'Descrizione', style: 'tableHeader' },
+        { text: 'Altro', style: 'tableHeader' },
+        { text: 'Valore €', style: 'tableHeader', alignment: 'right' }
+      ]);
+
+      let currentGroup = null;
+      let subtotal = 0;
+      let grandTotal = 0;
+
+      for (let i = 0; i < righe.length; i++) {
+        const r = righe[i];
+
+        // Quando cambio gruppo (e non è il primo) aggiungo la riga subtotale precedente
+        if (currentGroup !== null && r.gruppo !== currentGroup) {
+          // riga subtotale
+          body.push([
+            { text: `Subtotale ${currentGroup}`, colSpan: 3, style: 'subtotalLabel' }, {}, {}, { text: subtotal.toFixed(2), style: 'subtotalValue', alignment: 'right' }
+          ]);
+          // azzeriamo subtotal per il nuovo gruppo
+          subtotal = 0;
+        }
+
+        // Aggiungo la riga dati
+        body.push([
+          { text: r.gruppo },
+          { text: r.descr },
+          { text: r.alt },
+          { text: r.valore.toFixed(2), alignment: 'right' }
+        ]);
+
+        // aggiorniamo contatori
+        currentGroup = r.gruppo;
+        subtotal += r.valore;
+        grandTotal += r.valore;
+      }
+
+      // dopo l'ultimo gruppo, aggiungiamo il suo subtotale
+      if (currentGroup !== null) {
+        body.push([
+          { text: `Subtotale ${currentGroup}`, colSpan: 3, style: 'subtotalLabel' }, {}, {}, { text: subtotal.toFixed(2), style: 'subtotalValue', alignment: 'right' }
+        ]);
+      }
+
+      // Riga del totale complessivo
+      body.push([
+        { text: 'Totale complessivo', colSpan: 3, style: 'totalLabel' }, {}, {}, { text: grandTotal.toFixed(2), style: 'totalValue', alignment: 'right' }
+      ]);
+
+      // Document Definition
+      const dd = {
+        pageMargins: [40, 60, 40, 60],
+        content: [
+          { text: 'Tabella raggruppata con subtotali', style: 'title', margin: [0, 0, 0, 8] },
+          {
+            table: {
+              headerRows: 1,
+              widths: [100, '*', 120, 90],
+              body: body
+            },
+            layout: 'lightHorizontalLines'
+          }
+        ],
+        styles: {
+          title: { fontSize: 14, bold: true },
+          tableHeader: { fillColor: '#d3d3d3', bold: true },
+          subtotalLabel: { italics: true, fillColor: '#f2f2f2' },
+          subtotalValue: { bold: true, fillColor: '#f2f2f2' },
+          totalLabel: { bold: true, fillColor: '#d9edf7' },
+          totalValue: { bold: true, fillColor: '#d9edf7' }
+        },
+        footer: function(currentPage, pageCount) {
+          return {
+            margin: [40, 0, 40, 10],
+            columns: [ { text: '' }, { text: `Pagina ${currentPage} / ${pageCount}`, alignment: 'right' } ]
+          };
+        }
+      };
+
+      // Creiamo e apriamo il PDF
+      pdfMake.createPdf(dd).open();
+    }
+  </script>
+</body>
+</html>
