@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>Background casuale multi-pagina</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 2rem;
+    }
+    button {
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: none;
+      background: #0077cc;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    button:hover { background: #005fa3; }
+    h2 { margin-bottom: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h2>Esempio S18 — Background casuale per pagine</h2>
+  <p>Premi il pulsante per generare un PDF di 3 pagine. Le pagine 1 e 2 avranno uno sfondo generato casualmente; la pagina 3 avrà uno sfondo diverso con watermark.</p>
+  <button onclick="generaPDF()">Genera PDF</button>
+
+  <script>
+    // 🎨 Funzione helper: genera un colore esadecimale casuale
+    function coloreCasualeHex() {
+      const rnd = () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0');
+      return '#' + rnd() + rnd() + rnd();
+    }
+
+    // 📄 Genera il PDF: le chiamate a background() ricevono currentPage e pageSize
+    function generaPDF() {
+      // Cache dei colori per pagina durante questa generazione, così ogni pagina mantiene il suo colore
+      const coloriPerPagina = {};
+
+      const dd = {
+        pageSize: 'A4',
+        pageMargins: [40, 60, 40, 60],
+
+        // background può essere una funzione: restituisce un nodo o un array di nodi
+        background: function(currentPage, pageSize) {
+          // Se non abbiamo ancora scelto un colore per questa pagina, lo calcoliamo ora
+          if (!coloriPerPagina[currentPage]) {
+            if (currentPage <= 2) {
+              // Pagine 1 e 2: sfondo completamente casuale
+              coloriPerPagina[currentPage] = coloreCasualeHex();
+            } else {
+              // Pagina 3: colore neutro diverso
+              coloriPerPagina[currentPage] = '#f5efe6';
+            }
+          }
+
+          const col = coloriPerPagina[currentPage];
+
+          if (currentPage <= 2) {
+            // Ritorniamo un canvas che riempie l'intera pagina con il colore scelto
+            // e aggiungiamo un testo centrale che indica il nome dello sfondo (Background 1 / 2)
+            return [
+              { canvas: [ { type: 'rect', x: 0, y: 0, w: pageSize.width, h: pageSize.height, color: col } ] },
+              {
+                text: currentPage === 1 ? 'Background 1' : 'Background 2',
+                absolutePosition: { x: 0, y: (pageSize.height / 2) - 20 },
+                width: pageSize.width,
+                alignment: 'center',
+                fontSize: 28,
+                bold: true,
+                color: '#ffffff'
+              }
+            ];
+          }
+
+          // Pagina 3: sfondo beige + watermark testuale centrale molto tenue.
+          // Aggiungiamo anche la dicitura 'Background 3' al centro oltre al watermark esistente.
+          return [
+            { canvas: [ { type: 'rect', x: 0, y: 0, w: pageSize.width, h: pageSize.height, color: col } ] },
+            // Testo centrale che indica il background della pagina 3
+            {
+              text: 'Background 3',
+              absolutePosition: { x: 0, y: (pageSize.height / 2) - 40 },
+              width: pageSize.width,
+              alignment: 'center',
+              fontSize: 32,
+              bold: true,
+              color: '#cccccc'
+            },
+            // Watermark testuale come nodo di sfondo posizionato al centro (più in basso)
+            {
+              text: 'DOCUMENTO DI ESEMPIO',
+              absolutePosition: { x: (pageSize.width / 2) - 160, y: (pageSize.height / 2) - 2 },
+              fontSize: 28,
+              bold: true,
+              color: '#dddddd'
+            }
+          ];
+        },
+
+        // Contenuto: forziamo i pageBreak per ottenere esattamente 3 pagine
+        content: [
+          // --- Pagina 1 ---
+          { text: 'Titolo: Esempio S18', style: 'title' },
+          { text: 'Sottotitolo: sfondo casuale per pagina 1 e 2; sfondo diverso per pagina 3', margin: [0, 8, 0, 12] },
+          { text: 'Questa prima pagina contiene un breve paragrafo dimostrativo. Premi nuovamente "Genera PDF" per ottenere nuovi colori casuali sulle prime due pagine.', margin: [0, 0, 0, 10] },
+          { text: 'Esempio di paragrafo con un po\' di testo per vedere il wrapping all\'interno della pagina. Il colore di sfondo è random.', margin: [0, 0, 0, 10] },
+          { text: '', pageBreak: 'after' },
+
+          // --- Pagina 2 ---
+          { text: 'Pagina 2 — Contenuti vari', style: 'h2' },
+          { text: 'Esempio di lista puntata e tabella:', margin: [0, 6, 0, 6] },
+          {
+            ul: [
+              'Punto A: descrizione breve',
+              'Punto B: descrizione un po\' più lunga per testare l\'a capo automatico nella lista',
+              'Punto C: altro elemento'
+            ],
+            margin: [0, 0, 0, 10]
+          },
+          { text: 'Tabella di esempio', bold: true, margin: [0, 8, 0, 6] },
+          {
+            table: {
+              headerRows: 1,
+              widths: ['*', 'auto', 'auto'],
+              body: [
+                ['Prodotto', 'Q.tà', 'Prezzo'],
+                ['Mela', '10', '€2.00'],
+                ['Banana', '5', '€1.50'],
+                ['Arancia', '8', '€3.20']
+              ]
+            },
+            layout: 'lightHorizontalLines'
+          },
+          { text: '', pageBreak: 'after' },
+
+          // --- Pagina 3 ---
+          { text: 'Pagina 3 — Conclusione', style: 'title' },
+          { text: 'Questa pagina usa uno sfondo diverso (beige tenue) e un watermark testuale sullo sfondo.', margin: [0, 8, 0, 12] },
+          { text: 'Nota: il watermark è stato aggiunto come parte del background per non interferire con il contenuto.', margin: [0, 0, 0, 10] },
+          { text: 'Grazie per aver provato l\'esempio S18! Rigenerando il PDF otterrai nuovi colori casuali sulle prime due pagine.', margin: [0, 8, 0, 0] }
+        ],
+
+        styles: {
+          title: { fontSize: 20, bold: true },
+          h2: { fontSize: 16, bold: true }
+        }
+      };
+
+      // Crea e apre il PDF
+      pdfMake.createPdf(dd).open();
+    }
+  </script>
+</body>
+</html>
