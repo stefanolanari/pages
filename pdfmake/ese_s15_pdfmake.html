@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>Esempio S15 - Matrici grandi e header casuale (A4 landscape)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; padding: 2rem; }
+    button { padding: 10px 18px; border-radius: 6px; border: none; background: #0077cc; color: white; font-size: 15px; cursor: pointer; }
+    button:hover { background: #005fa3; }
+    h2 { margin-bottom: 0.5rem; }
+    p.note { color: #555; }
+    .small { font-size: 11px; }
+  </style>
+</head>
+<body>
+  <h2>Ese S15 — A4 landscape con tabelle larghe</h2>
+  <p class="note">Tre matrici: 5 colonne, 40 colonne (auto), 40 colonne (largh. = pagina/40). Genera PDF per vedere il risultato.</p>
+  <button onclick="generaPDF()">Genera PDF</button>
+
+  <script>
+    // 🎲 Generatore semplice di testo casuale (parole separate)
+    function randomWord(len) {
+      const chars = 'abcdefghijklmnopqrstuvwxyz';
+      let s = '';
+      for (let i = 0; i < len; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
+      return s;
+    }
+
+    function randomText(words) {
+      const out = [];
+      for (let i = 0; i < words; i++) out.push(randomWord(3 + Math.floor(Math.random() * 6)));
+      return out.join(' ');
+    }
+
+    // 🎨 Crea la body di una tabella con `rows` x `cols` contenente testo casuale
+    function buildTableBody(rows, cols, wordsPerCell) {
+      const body = [];
+      for (let r = 0; r < rows; r++) {
+        const row = [];
+        for (let c = 0; c < cols; c++) {
+          row.push({ text: randomText(wordsPerCell), margin: [2, 2, 2, 2], fontSize: 8 });
+        }
+        body.push(row);
+      }
+      return body;
+    }
+
+    // 🎯 Funzione principale che genera il PDF
+    function generaPDF() {
+      // Messaggi casuali per l'header (scelto una volta per il documento)
+      const messages = [
+        'Header casuale — Buona lettura!',
+        'Intestazione dinamica: messaggio generato automaticamente',
+        'Esempio S15 — tabelle ampie',
+        'Header: contenuto casuale per test layout'
+      ];
+      const headerMessage = messages[Math.floor(Math.random() * messages.length)];
+
+      // Margini usati per calcolare la larghezza effettiva del contenuto
+      const pageMargins = [40, 60, 40, 60]; // left, top, right, bottom
+
+      // A4 in punti: 595.28 x 841.89 (portrait). In landscape la larghezza è 841.89
+      const A4_LANDSCAPE_WIDTH = 841.89;
+      const contentWidth = A4_LANDSCAPE_WIDTH - pageMargins[0] - pageMargins[2];
+
+      // Tabella 1: 5 colonne, 10 righe
+      const table1Cols = 5;
+      const table1Rows = 10;
+      const table1Body = buildTableBody(table1Rows, table1Cols, 6);
+      // Header colonne per tabella 1 (numeri)
+      const table1Header = [];
+      for (let c = 0; c < table1Cols; c++) {
+        table1Header.push({ text: String(c + 1), bold: true, alignment: 'center', fontSize: 9 });
+      }
+      table1Body.unshift(table1Header);
+
+      // Tabella 2: 40 colonne, 10 righe, larghezza colonne = 'auto'
+      const table2Cols = 40;
+      const table2Rows = 10;
+      const table2Body = buildTableBody(table2Rows, table2Cols, 2);
+      // Header colonne per tabella 2 (numeri)
+      const table2Header = [];
+      for (let c = 0; c < table2Cols; c++) {
+        table2Header.push({ text: String(c + 1), bold: true, alignment: 'center', fontSize: 7 });
+      }
+      table2Body.unshift(table2Header);
+      const table2Widths = Array(table2Cols).fill('auto');
+
+      // Tabella 3: 40 colonne, 10 righe, larghezza colonna = contentWidth / table3Cols
+      const table3Cols = 40;
+      const table3Rows = 10;
+      const table3Body = buildTableBody(table3Rows, table3Cols, 2);
+      // Header colonne per tabella 3 (numeri)
+      const table3Header = [];
+      for (let c = 0; c < table3Cols; c++) {
+        table3Header.push({ text: String(c + 1), bold: true, alignment: 'center', fontSize: 7 });
+      }
+      table3Body.unshift(table3Header);
+      const colWidthFixed = 15;
+      const table3Widths = Array(table3Cols).fill(colWidthFixed);
+
+      // Document definition
+      const dd = {
+        pageSize: 'A4',
+        pageOrientation: 'landscape',
+        pageMargins: pageMargins,
+        header: function(currentPage, pageCount, pageSize) {
+          return {
+            columns: [
+              { text: headerMessage, alignment: 'center', margin: [0, 10, 0, 0], style: 'h' }
+            ]
+          };
+        },
+        content: [
+          { text: 'Tabella 1 — 5 colonne, 10 righe', style: 'title' },
+          {
+            style: 'tableExample',
+            table: {
+              headerRows: 1,
+              widths: Array(table1Cols).fill('*'),
+              body: table1Body
+            },
+            layout: {
+              hLineWidth: function(i, node) { return 0.5; },
+              vLineWidth: function(i, node) { return 0.5; },
+              hLineColor: function(i, node) { return '#CCCCCC'; },
+              vLineColor: function(i, node) { return '#CCCCCC'; },
+              paddingLeft: function(i, node) { return 4; },
+              paddingRight: function(i, node) { return 4; },
+              paddingTop: function(i, node) { return 2; },
+              paddingBottom: function(i, node) { return 2; }
+            },
+            margin: [0, 6, 0, 12]
+          },
+
+          { text: 'Tabella 2 — 40 colonne (width = auto), 10 righe', style: 'title' },
+          {
+            style: 'tableExampleSmall',
+            table: {
+              headerRows: 1,
+              widths: table2Widths,
+              body: table2Body
+            },
+            layout: {
+              hLineWidth: function(i, node) { return 0.5; },
+              vLineWidth: function(i, node) { return 0.5; },
+              hLineColor: function(i, node) { return '#DDDDDD'; },
+              vLineColor: function(i, node) { return '#DDDDDD'; },
+              paddingLeft: function(i, node) { return 2; },
+              paddingRight: function(i, node) { return 2; },
+              paddingTop: function(i, node) { return 1; },
+              paddingBottom: function(i, node) { return 1; }
+            },
+            margin: [0, 6, 0, 12]
+          },
+
+          { text: 'Tabella 3 — 40 colonne (width = 15pt), 10 righe', style: 'title' },
+          {
+            style: 'tableExampleSmall',
+            table: {
+              headerRows: 1,
+              widths: table3Widths,
+              body: table3Body
+            },
+            layout: {
+              hLineWidth: function(i, node) { return 0.5; },
+              vLineWidth: function(i, node) { return 0.5; },
+              hLineColor: function(i, node) { return '#CCCCCC'; },
+              vLineColor: function(i, node) { return '#CCCCCC'; },
+              paddingLeft: function(i, node) { return 2; },
+              paddingRight: function(i, node) { return 2; },
+              paddingTop: function(i, node) { return 1; },
+              paddingBottom: function(i, node) { return 1; }
+            },
+            margin: [0, 6, 0, 12]
+          }
+        ],
+        styles: {
+          title: { fontSize: 13, bold: true, margin: [0, 6, 0, 6] },
+          tableExample: { fontSize: 10 },
+          tableExampleSmall: { fontSize: 8 },
+          h: { fontSize: 12 }
+        },
+        defaultStyle: {
+          // Riduciamo il font di default per permettere alle tabelle di entrare
+          fontSize: 9
+        }
+      };
+
+      // Crea e apre il PDF
+      pdfMake.createPdf(dd).open();
+    }
+  </script>
+</body>
+</html>
