@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>Biglietto da visita PDF con QRCode</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 2rem;
+    }
+    button {
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: none;
+      background: #0077cc;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    button:hover { background: #005fa3; }
+    h2 { margin-bottom: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h2>Biglietto da visita PDF</h2>
+  <p>Premi il pulsante per generare un PDF formato biglietto da visita con QRCode</p>
+  <button onclick="generaPDF()">Genera PDF</button>
+
+  <script>
+    // 🎨 Dati della persona
+    const datiPersona = {
+      nome: 'Mario Rossi',
+      titolo: 'Consulente IT',
+      telefono: '+39 333 1234567',
+      email: 'mario.rossi@email.it',
+      sito: 'www.mariorossi.it'
+    };
+
+    // 📄 Helper: genera una vCard (VERSION:3.0) dal profilo
+    function generaVCard(person) {
+      const lines = [
+        'BEGIN:VCARD',
+        'VERSION:3.0',
+        `N:${person.nome.split(' ').slice(-1).join(' ')};${person.nome.split(' ').slice(0,-1).join(' ')};;;`,
+        `FN:${person.nome}`,
+        person.titolo ? `TITLE:${person.titolo}` : '',
+        person.telefono ? `TEL;TYPE=CELL:${person.telefono}` : '',
+        person.email ? `EMAIL:${person.email}` : '',
+        person.sito ? `URL:${person.sito}` : '',
+        'END:VCARD'
+      ];
+      return lines.filter(Boolean).join('\n');
+    }
+
+    function generaPDF() {
+      // Generiamo la vCard dal profilo
+      const vcard = generaVCard(datiPersona);
+      const dd = {
+        // Dimensioni biglietto da visita: 90x50 mm (convertito in punti: 1mm ≈ 2.834pt)
+        pageSize: { width: 255, height: 142 },
+        pageMargins: [12, 12, 12, 12],
+        content: [
+          {
+            columns: [
+              [
+                { text: datiPersona.nome, style: 'nome' },
+                { text: datiPersona.titolo, style: 'titolo', margin: [0, 2, 0, 8] },
+                { text: 'Tel: ' + datiPersona.telefono, style: 'info' },
+                { text: 'Email: ' + datiPersona.email, style: 'info' },
+                { text: datiPersona.sito, style: 'info', color: '#0077cc', margin: [0, 2, 0, 0] }
+              ],
+              [
+                // QRCode contenente la vCard: smartphones riconoscono il formato e propongono l'aggiunta ai contatti
+                { qr: vcard, fit: 72, errorCorrectionLevel: 'H' }
+              ]
+            ]
+          }
+        ],
+        styles: {
+          nome: { fontSize: 16, bold: true },
+          titolo: { fontSize: 12, italics: true },
+          info: { fontSize: 10 }
+        }
+      };
+      pdfMake.createPdf(dd).open();
+    }
+  </script>
+</body>
+</html>
