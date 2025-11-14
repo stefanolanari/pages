@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>ESE_Z05 - Disegno con linee e box</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; padding: 2rem; }
+    button { padding: 10px 18px; border-radius: 6px; border: none; background: #0077cc; color: white; font-size: 15px; cursor: pointer; }
+    button:hover { background: #005fa3; }
+  </style>
+</head>
+<body>
+  <h2>ESE_Z05 — Disegno con linee e box</h2>
+  <button onclick="generaPDF()">Genera PDF</button>
+
+  <script>
+    // 🎨 ESEMPIO Z05 - Disegno con rettangoli, linee e poligoni
+    // Funzione che costruisce il document-definition e apre il PDF
+    function generaPDF() {
+      const dd = {
+        pageSize: 'A4',
+        pageMargins: [40, 40, 40, 40],
+        content: [
+          // canvas principale posizionato in modo assoluto per controllo preciso
+          {
+            canvas: [
+              // Header: riquadro verde piccolo (ESE_Z05)
+              { type: 'rect', x: 40, y: 20, w: 110, h: 36, r: 4, color: '#2ecc71', lineColor: '#000', lineWidth: 1 },
+              // Header: riquadro blu largo (titolo)
+              { type: 'rect', x: 170, y: 20, w: 360, h: 36, r: 4, color: '#17a2b8', lineColor: '#000', lineWidth: 1 },
+
+              // Matita: corpo rettangolare grande (giallo-arancio)
+              { type: 'rect', x: 50, y: 90, w: 160, h: 520, color: '#f8c46b', lineColor: '#000', lineWidth: 1 },
+              // Linee verticali interne al corpo della matita
+              { type: 'line', x1: 80, y1: 90, x2: 80, y2: 610, lineWidth: 1.2, lineColor: '#000' },
+              { type: 'line', x1: 150, y1: 90, x2: 150, y2: 610, lineWidth: 1.2, lineColor: '#000' },
+
+              // Base della matita (sottile lineetta orizzontale) - bordo tra corpo e punta
+              { type: 'line', x1: 50, y1: 610, x2: 210, y2: 610, lineWidth: 1.2, lineColor: '#000' },
+
+              // Punta della matita: triangolo (poligono)
+              { type: 'polygon', points: [ {x:50,y:610}, {x:210,y:610}, {x:130,y:760} ], color: '#ffffff', lineColor: '#000', lineWidth: 1.2 },
+
+              // Piccola ombra alla punta (sottile linea orizzontale a sinistra)
+              { type: 'line', x1: 130, y1: 760, x2: 240, y2: 760, lineWidth: 3, lineColor: '#000' },
+
+              // Linea che collega la punta alla casella nera
+              { type: 'line', x1: 110, y1: 760, x2: 350, y2: 760, lineWidth: 4, lineColor: '#000' },
+
+              // Casella nera arrotondata (rettangolo con angoli arrotondati)
+              { type: 'rect', x: 360, y: 700, w: 180, h: 90, r: 6, color: '#000000', lineColor: '#000', lineWidth: 1 }
+            ],
+            // posizioniamo il canvas all'origine della pagina (rispetta i pageMargins)
+            absolutePosition: { x: 0, y: 0 }
+          },
+
+          // Testi e sovrapposizioni con absolutePosition per posizionare sopra i canvas
+          { text: 'ESE_Z05', bold: true, absolutePosition: { x: 70, y: 28 }, fontSize: 12 },
+          { text: 'DISEGNO CON LINEE E BOX', bold: true, color: 'white', absolutePosition: { x: 300, y: 28 }, fontSize: 12 },
+
+          // Testo dentro la casella nera (bianco). Usiamo width per andare a capo come nell'immagine
+          { text: 'Nel mezzo del cammin di\na vita...', color: 'white', absolutePosition: { x: 372, y: 710 }, fontSize: 10, width: 164 }
+        ],
+
+        // Stili globali (semplici)
+        styles: {
+          header: { fontSize: 16, bold: true }
+        }
+      };
+
+      // Creiamo e apriamo il PDF
+      pdfMake.createPdf(dd).open();
+    }
+  </script>
+</body>
+</html>
