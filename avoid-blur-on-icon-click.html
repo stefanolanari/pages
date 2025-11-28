@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Esempio blur + icona</title>
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+    }
+    .box {
+      margin-bottom: 30px;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    input {
+      padding: 5px;
+      font-size: 14px;
+    }
+    .icon {
+      cursor: pointer;
+      padding: 4px 8px;
+      background: #eee;
+      border-radius: 4px;
+      display: inline-block;
+      margin-left: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Esempio A – Icona con eventi click (il blur SCATTA)</h2>
+  <div class="box">
+    <input id="inputA" type="text" placeholder="clicca qui e poi fai click sull'icona">
+    <span class="icon" id="iconA">🔍</span>
+    <p id="logA"></p>
+  </div>
+
+  <h2>Esempio B – Icona con mousedown + preventDefault (il blur NON SCATTA)</h2>
+  <div class="box">
+    <input id="inputB" type="text" placeholder="clicca qui e poi fai click sull'icona">
+    <span class="icon" id="iconB">🔍</span>
+    <p id="logB"></p>
+  </div>
+
+
+<script>
+  // --- ESEMPIO A: ICONA CON CLICK → il blur SCATTA ---
+  const inputA = document.getElementById("inputA");
+  const iconA  = document.getElementById("iconA");
+  const logA   = document.getElementById("logA");
+
+  inputA.addEventListener("blur", () => {
+    logA.textContent += "→ BLUR emesso\n";
+  });
+
+  iconA.addEventListener("click", () => {
+    logA.textContent += "→ CLICK icona\n";
+  });
+
+
+  // --- ESEMPIO B: ICONA CON MOUSEDOWN + preventDefault → il blur NON SCATTA ---
+  const inputB = document.getElementById("inputB");
+  const iconB  = document.getElementById("iconB");
+  const logB   = document.getElementById("logB");
+
+  inputB.addEventListener("blur", () => {
+    logB.textContent += "→ BLUR emesso\n";
+  });
+
+  iconB.addEventListener("mousedown", (e) => {
+    e.preventDefault();  // impedisce il blur
+    logB.textContent += "→ MOUSEDOWN icona (preventDefault)\n";
+  });
+
+  iconB.addEventListener("click", () => {
+    logB.textContent += "→ CLICK icona\n";
+  });
+</script>
+
+</body>
+</html>
