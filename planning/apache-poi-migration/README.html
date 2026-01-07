@@ -2,89 +2,13 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Documentazione Migrazione Apache POI</title>
-  <style>
-    body {
-      background: #181a1b;
-      color: #e0e0e0;
-      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      line-height: 1.6;
-    }
-    main {
-      max-width: 900px;
-      margin: 32px auto;
-      background: #232527;
-      border-radius: 12px;
-      box-shadow: 0 2px 16px #0006;
-      padding: 32px 40px;
-    }
-    h1, h2, h3, h4 {
-      color: #90caf9;
-      margin-top: 1.5em;
-    }
-    h1 {
-      font-size: 2.2em;
-      margin-bottom: 0.5em;
-    }
-    h2 {
-      font-size: 1.5em;
-      border-bottom: 1px solid #333;
-      padding-bottom: 0.2em;
-    }
-    a {
-      color: #64b5f6;
-      text-decoration: underline;
-      transition: color 0.2s;
-    }
-    a:hover {
-      color: #ffb74d;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #222;
-      margin: 1em 0;
-    }
-    th, td {
-      border: 1px solid #333;
-      padding: 8px 12px;
-      text-align: left;
-    }
-    th {
-      background: #263238;
-      color: #90caf9;
-    }
-    tr:nth-child(even) {
-      background: #212121;
-    }
-    ul, ol {
-      margin-left: 2em;
-    }
-    pre, code {
-      background: #212121;
-      color: #ffd54f;
-      border-radius: 6px;
-      padding: 8px 12px;
-      font-size: 1em;
-      font-family: 'Fira Mono', 'Consolas', monospace;
-      overflow-x: auto;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #333;
-      margin: 2em 0;
-    }
-    .emoji {
-      font-size: 1.2em;
-    }
-  </style>
+  <title>Migrazione Apache POI</title>
+  <link rel="stylesheet" href="style-dark.css">  
 </head>
 <body>
 <main>
-  <h1>Documentazione Migrazione Apache POI</h1>
-  <p>Questa directory contiene la documentazione completa per la migrazione da Apache POI 2.0 ad Apache POI 5.x per abilitare il supporto XLSX.</p>
+  <h1>Migrazione Apache POI</h1>
+  <p>Questo documento è una guida strutturata per la migrazione di un progetto Java dalla versione Apache POI 2.0 alla 5.2.5. È organizzato per destinatari diversi (stakeholder, responsabili tecnici, sviluppatori, QA) e offre una panoramica completa delle fasi, dei rischi, dei benefici e delle attività necessarie</p>
   <h2>📚 Struttura della Documentazione</h2>
   <h3>1. <a href="apache-poi-executive-summary.html">Sintesi Esecutiva</a></h3>
   <p><strong>Inizia qui se sei un decisore</strong></p>
@@ -177,7 +101,7 @@
     <li><strong>Versione Attuale</strong>: Apache POI 2.0-final-20040126 (Gennaio 2004)</li>
     <li><strong>Versione Target</strong>: Apache POI 5.2.5 (2023)</li>
     <li><strong>File Coinvolti</strong>: 92+ file Java</li>
-    <li><strong>Cambi Bloccanti</strong>: 5 cambi API principali</li>
+    <li><strong>Regressioni bloccanti</strong>: 5 modifiche ad API principali</li>
     <li><strong>Nuova Capacità</strong>: Supporto file XLSX ✨</li>
     <li><strong>Sforzo Stimato</strong>: 54-78 ore (2-3 settimane)</li>
     <li><strong>Team</strong>: 2 sviluppatori</li>
@@ -210,9 +134,9 @@ Fase 4: Documentazione & Deploy (1-2 giorni)
 └─ Rollout graduale
   </pre>
   <hr>
-  <h2>⚠️ Cambi Bloccanti</h2>
+  <h2>⚠️ Regressioni bloccanti</h2>
   <table border="1">
-    <tr><th>Cambio</th><th>File Coinvolti</th><th>Sforzo</th></tr>
+    <tr><th>Modifica</th><th>File Coinvolti</th><th>Sforzo</th></tr>
     <tr><td>Region → CellRangeAddress</td><td>~20 file</td><td>Basso</td></tr>
     <tr><td>HSSFColor → IndexedColors</td><td>~50 file</td><td>Medio</td></tr>
     <tr><td>Costanti tipo cella → enum CellType</td><td>~30 file</td><td>Basso</td></tr>
