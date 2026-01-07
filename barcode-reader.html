@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Scanner Barcode / QR</title>
+
+<style>
+    body {
+        font-family: sans-serif;
+        padding: 20px;
+        background: #f5f5f5;
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    input {
+        width: 90%;
+        max-width: 350px;
+        padding: 10px;
+        margin: 10px 0;
+        font-size: 1.1rem;
+        border-radius: 6px;
+        border: 1px solid #aaa;
+    }
+
+    /* Contenitore posizionato al centro */
+    #videoContainer {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        
+        cursor: grab;
+        touch-action: none;
+    }
+
+    #videoContainer:active {
+        cursor: grabbing;
+    }
+
+    video {
+        width: 280px;
+        max-width: 80vw;
+        border: 2px solid #333;
+        border-radius: 12px;
+        background: #000;
+        display: none;
+    }
+
+    button {
+        margin-top: 15px;
+        padding: 10px 20px;
+        font-size: 1rem;
+        border: none;
+        background: #1976d2;
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+</style>
+</head>
+
+<body>
+
+<h3>Scanner Barcode / QR</h3>
+
+<input type="text" placeholder="Clicca qui e scansiona">
+<input type="text" placeholder="Oppure qui…">
+<input type="text" placeholder="…o qualunque altro input">
+
+<div id="videoContainer">
+    <video id="video" muted playsinline></video>
+</div>
+
+<button id="btnStart">Avvia Scanner</button>
+<button id="btnStop" style="display:none;">Ferma Scanner</button>
+
+<!-- ZXing UMD -->
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@latest/umd/index.min.js"></script>
+
+<script>
+    const codeReader = new ZXing.BrowserMultiFormatReader();
+    const videoElem = document.getElementById("video");
+    const videoContainer = document.getElementById("videoContainer");
+    const btnStart = document.getElementById("btnStart");
+    const btnStop = document.getElementById("btnStop");
+
+    // --- Inserisce nel campo con focus ---
+    function getFocusedInput() {
+        return (document.activeElement && document.activeElement.tagName === "INPUT")
+            ? document.activeElement
+            : null;
+    }
+
+    btnStart.onclick = async () => {
+        btnStart.style.display = "none";
+        btnStop.style.display = "inline-block";
+		videoElem.style.display = "block";
+
+        try {
+            await codeReader.decodeFromVideoDevice(null, videoElem, (result, err) => {
+                if (result) {
+                    const value = result.getText();
+                    const input = getFocusedInput();
+                    if (input) input.value = value;
+                }
+            });
+        } catch (error) {
+            alert("Errore: " + error);
+        }
+    };
+
+    btnStop.onclick = () => {
+        codeReader.reset();
+        videoElem.srcObject = null;
+        btnStart.style.display = "inline-block";
+        btnStop.style.display = "none";
+		videoElem.style.display = "none";
+    };
+
+    // --- FUNZIONE DRAGGABLE (mouse + touch) ---
+    let offsetX = 0, offsetY = 0;
+    let isDragging = false;
+
+    function startDrag(e) {
+        isDragging = true;
+
+        const rect = videoContainer.getBoundingClientRect();
+
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        offsetX = clientX - rect.left;
+        offsetY = clientY - rect.top;
+
+        e.preventDefault();
+    }
+
+    function duringDrag(e) {
+        if (!isDragging) return;
+
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        videoContainer.style.left = (clientX - offsetX) + "px";
+        videoContainer.style.top  = (clientY - offsetY) + "px";
+
+        videoContainer.style.transform = "none";
+        e.preventDefault();
+    }
+
+    function stopDrag() {
+        isDragging = false;
+    }
+
+    videoContainer.addEventListener("mousedown", startDrag);
+    document.addEventListener("mousemove", duringDrag);
+    document.addEventListener("mouseup", stopDrag);
+
+    videoContainer.addEventListener("touchstart", startDrag, { passive: false });
+    document.addEventListener("touchmove", duringDrag, { passive: false });
+    document.addEventListener("touchend", stopDrag);
+</script>
+
+</body>
+</html>
