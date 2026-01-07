@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Migrazione Apache POI - Analisi Impatto sui File</title>
+  <link rel="stylesheet" href="style-dark.css">
+</head>
+<body>
+<main>
+  <h1>Migrazione Apache POI - Analisi Impatto sui File</h1>
+  <h2>Statistiche di Sintesi</h2>
+  <ul>
+    <li><strong>Totale file che usano POI</strong>: 100+</li>
+    <li><strong>File ad Alta Priorità</strong>: 25-30 file</li>
+    <li><strong>File a Media Priorità</strong>: 30-40 file</li>
+    <li><strong>File a Bassa Priorità</strong>: 40-50 file</li>
+  </ul>
+  <h2>Criteri di Classificazione</h2>
+  <h3>Alta Priorità</h3>
+  <ul>
+    <li>Componenti core del framework</li>
+    <li>Usati da più clienti</li>
+    <li>Contengono operazioni POI complesse</li>
+    <li>Usano classi deprecate (Region, HSSFColor)</li>
+  </ul>
+  <h3>Media Priorità</h3>
+  <ul>
+    <li>Implementazioni specifiche cliente</li>
+    <li>Generator di report</li>
+    <li>Utility di import/export</li>
+    <li>Uso POI moderato</li>
+  </ul>
+  <h3>Bassa Priorità</h3>
+  <ul>
+    <li>Uso POI semplice</li>
+    <li>File di test</li>
+    <li>Utility raramente usate</li>
+    <li>Richiedono modifiche minime al codice</li>
+  </ul>
+  <hr>
+  <h2>File ad Alta Priorità (Dettaglio)</h2>
+  <h3>1. Utility Core (com/rds_software/RdsUtil/poi/)</h3>
+  <ul>
+    <li><strong>PoiHelper.java</strong> - Utility core usata ovunque</li>
+    <li><strong>CellStyle.java</strong> - Stili usati estensivamente</li>
+    <li><strong>CellBorder.java</strong> - Gestione bordi</li>
+  </ul>
+  <h3>2. Componenti SpoolViewer (spoolviewer/excel/)</h3>
+  <ul>
+    <li><strong>RenderingContext.java</strong> - Gestione contesto core</li>
+    <li><strong>AbstractHandler.java</strong> - Classe base per handler</li>
+    <li><strong>WorkbookHandler.java</strong></li>
+    <li><strong>WorksheetHandler.java</strong></li>
+    <li><strong>CellHandler.java</strong></li>
+    <li><strong>StyleHandler.java</strong></li>
+  </ul>
+  <h3>3. Supporto XLSX (spoolviewer/excel/xlsx/)</h3>
+  <ul>
+    <li><strong>POILibsLoader.java</strong></li>
+    <li><strong>AbstractHandler.java</strong></li>
+    <li><strong>WorkbookHandler.java</strong></li>
+    <li><strong>CellHandler.java</strong></li>
+    <li><strong>StyleHandler.java</strong></li>
+  </ul>
+  <h3>4. Query Creator (querycreator/)</h3>
+  <ul>
+    <li><strong>HSSFWorkbookCreator.java</strong></li>
+    <li><strong>QueryCreator.java</strong></li>
+  </ul>
+  <h3>5. Utility Comuni</h3>
+  <ul>
+    <li><strong>XlsAddinsFillInfoFilter.java</strong></li>
+  </ul>
+  <hr>
+  <h2>File a Media Priorità (Sintesi)</h2>
+  <h3>Generator di Report Specifici Cliente</h3>
+  <ul>
+    <li><strong>Statistiche Righi (22 file)</strong></li>
+    <li><strong>Progetti Commdado (12 file)</strong></li>
+    <li><strong>Progetti Findomestic (8 file)</strong></li>
+    <li><strong>Altri Clienti (15 file)</strong></li>
+  </ul>
+</main>
+</body>
+</html>

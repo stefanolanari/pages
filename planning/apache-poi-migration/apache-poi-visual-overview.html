@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Migrazione Apache POI - Panoramica Visiva</title>
+  <link rel="stylesheet" href="style-dark.css">
+</head>
+<body>
+<main>
+  <h1>Migrazione Apache POI - Panoramica Visiva</h1>
+  <h2>Architettura Attuale</h2>
+  <pre>
+┌─────────────────────────────────────────────────────────────┐
+│                        Applicazione rdsv6                  │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐        │
+│  │  RdsUtil.poi │  │ SpoolViewer  │  │QueryCreator  │        │
+│  │  (3 file)    │  │  (10 file)   │  │  (2 file)    │        │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘        │
+│         │                  │                  │               │
+│         └──────────────────┴──────────────────┘               │
+│                            │                                  │
+│                            ▼                                  │
+│              ┌──────────────────────────┐                     │
+│              │   Apache POI 2.0-final   │                     │
+│              │    (Gennaio 2004)        │                     │
+│              │    ❌ NO supporto XLSX    │                     │
+│              │    ⚠️  20 anni            │                     │
+│              └──────────────────────────┘                     │
+│                            │                                  │
+│                            ▼                                  │
+│              ┌──────────────────────────┐                     │
+│              │     Solo file XLS        │                     │
+│              └──────────────────────────┘                     │
+│                                                              │
+│  ┌──────────────────────────────────────────────────┐        │
+│  │         Implementazioni Cliente                  │        │
+│  │  • Righi (22 file)                              │        │
+│  │  • Commdado (12 file)                           │        │
+│  │  • Findomestic (8 file)                         │        │
+│  │  • Altri (40+ file)                             │        │
+│  └──────────────────────────────────────────────────┘        │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+
+Supporto XLSX: Usa reflection (complesso, fragile)
+┌──────────────────────────────────────────┐
+│ POILibsLoader (basato su reflection)     │
+│ ├─ Class.forName("...XSSFWorkbook")      │
+│ ├─ Class.forName("...XSSFCell")          │
+│ └─ Gestione reflection complessa         │
+└──────────────────────────────────────────┘
+  </pre>
+  <h2>Architettura Target</h2>
+  <pre>
+┌─────────────────────────────────────────────────────────────┐
+│                        Applicazione rdsv6                  │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐        │
+│  │  RdsUtil.poi │  │ SpoolViewer  │  │QueryCreator  │        │
+│  │  (Aggiornato)│  │  (Aggiornato)│  │  (Aggiornato)│        │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘        │
+│         │                  │                  │               │
+│         └──────────────────┴──────────────────┘               │
+│                            │                                  │
+│              ┌─────────────┴─────────────┐                    │
+│              │                            │                   │
+│              ▼                            ▼                   │
+│   ┌──────────────────┐      ┌──────────────────┐             │
+│   │  Apache POI      │      │  Apache POI      │             │
+│   │  5.2.5 (core)    │      │  5.2.5 (ooxml)   │             │
+│   │  ✅ Supporto XLS  │      │  ✅ Supporto XLSX│             │
+│   │  ✅ Manutenzione  │      │  ✅ API streaming│             │
+│   └────────┬─────────┘      └────────┬─────────┘             │
+│            │                          │                      │
+│            └────────────┬─────────────┘                      │
+│                         │                                    │
+│                         ▼                                    │
+│          ┌──────────────────────────┐                        │
+│          │   File XLS + XLSX        │                        │
+│          │   ✅ Formato agnostico    │                        │
+│          └──────────────────────────┘                        │
+│                                                              │
+│  ┌──────────────────────────────────────────────────┐        │
+│  │         Implementazioni Cliente                  │        │
+│  │  • Righi (Aggiornato)                           │        │
+│  │  • Commdado (Aggiornato)                        │        │
+│  │  • Findomestic (Aggiornato)                     │        │
+│  │  • Altri (Aggiornato)                           │        │
+│  └──────────────────────────────────────────────────┘        │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+
+Supporto XLSX: API nativa (pulita, veloce)
+┌──────────────────────────────────────────┐
+│ Import XSSF diretti                      │
+│ ├─ import org.apache.poi.xssf...         │
+│ ├─ XSSFWorkbook workbook = new...        │
+│ └─ Nessuna reflection necessaria         │
+└──────────────────────────────────────────┘
+  </pre>
+  <h2>Percorso di Migrazione</h2>
+  <pre>
+INIZIO                                                 FINE
+  │                                                     │
+  ▼                                                     ▼
+┌────────────┐  Fase 1   ┌────────────┐  Fase 2   ┌────────────┐  Fase 3   ┌────────────┐
+│   POI 2.0  │ ────────▶ │Dipendenze  │ ────────▶ │Codice      │ ────────▶ │   Test     │
+│ (Attuale)  │ 1-2 giorni│ Aggiornate │ 3-5 giorni│ Migrazione │ 3-5 giorni│ Validazione│
+│            │           │            │           │            │           │            │
+│ • Solo XLS │           │• POI 5.2.5 │           │• Aggiorna  │           │• Test unit │
+│ • No XLSX  │           │• poi-ooxml │           │  import    │           │• Test      │
+│ • Insicuro │           │• Sicurezza │           │• Fix codice│           │  cliente   │
+└────────────┘           └────────────┘           └────────────┘           └────────────┘
+
+Timeline: 2-3 settimane totali
+  </pre>
+  <h2>Mappa dei Cambi Bloccanti</h2>
+  <pre>
+Classi POI 2.0                   Classi POI 5.x
+─────────────────                ──────────────────
+
+org.apache.poi.hssf.util.
+├─ Region                  →   org.apache.poi.ss.util.CellRangeAddress
+├─ HSSFColor               →   org.apache.poi.ss.usermodel.IndexedColors
+└─ HSSFColor.YELLOW.index  →   IndexedColors.YELLOW.getIndex()
+
+Costanti HSSFCell            
+├─ CELL_TYPE_NUMERIC       →   CellType.NUMERIC
+├─ CELL_TYPE_STRING        →   CellType.STRING
+├─ CELL_TYPE_BOOLEAN       →   CellType.BOOLEAN
+├─ CELL_TYPE_FORMULA       →   CellType.FORMULA
+
+Costanti HSSFCellStyle       
+├─ SOLID_FOREGROUND        →   FillPatternType.SOLID_FOREGROUND
+├─ BORDER_THIN             →   BorderStyle.THIN
+├─ ALIGN_CENTER            →   HorizontalAlignment.CENTER
+├─ VERTICAL_CENTER         →   VerticalAlignment.CENTER
+
+org.apache.poi.hssf.usermodel.
+  </pre>
+</main>
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Migrazione Apache POI - Sintesi Esecutiva</title>
+  <link rel="stylesheet" href="style-dark.css">
+</head>
+<body>
+<main>
+  <h1>Migrazione Apache POI - Sintesi Esecutiva</h1>
+  <h2>Panoramica Rapida</h2>
+  <p>Questo progetto utilizza attualmente <strong>Apache POI 2.0-final-20040126</strong> (rilasciato a gennaio 2004), che:</p>
+  <ul>
+    <li>❌ NON supporta i file XLSX moderni</li>
+    <li>❌ Ha 20 anni e nessun aggiornamento di sicurezza</li>
+    <li>✅ Supporta solo il formato XLS legacy</li>
+  </ul>
+  <h2>La Richiesta</h2>
+  <p>La questione riguarda la comprensione dell'impatto dell'aggiornamento all'ultima versione di Apache POI per supportare i file XLSX.</p>
+  <h2>Cosa Abbiamo Consegnato</h2>
+  <p>Sono stati creati tre documenti completi:</p>
+  <h3>1. Piano di Migrazione (<a href="apache-poi-migration-plan.html">docs/apache-poi-migration-plan.md</a>)</h3>
+  <ul>
+    <li>Analisi dello stato attuale (versione, pattern d'uso, 100+ file coinvolti)</li>
+    <li>Raccomandazione versione target: <strong>Apache POI 5.2.5</strong></li>
+    <li>Strategia di implementazione in 4 fasi</li>
+    <li>Valutazione rischi e strategie di mitigazione</li>
+    <li>Timeline: <strong>2-3 settimane</strong> con 2 sviluppatori</li>
+    <li>Criteri di successo e piano di rollback</li>
+  </ul>
+  <h3>2. Guida Migrazione Codice (<a href="apache-poi-code-migration-guide.html">docs/apache-poi-code-migration-guide.md</a>)</h3>
+  <ul>
+    <li>Riferimento rapido per cambi POI 2.0 → 5.x</li>
+    <li>11 esempi dettagliati di pattern di codice</li>
+    <li>Errori di compilazione comuni e soluzioni</li>
+    <li>Template di test unitari</li>
+    <li>Consigli per ottimizzazione prestazioni</li>
+  </ul>
+  <h3>3. Analisi Impatto File (<a href="apache-poi-file-impact-analysis.html">docs/apache-poi-file-impact-analysis.md</a>)</h3>
+  <ul>
+    <li>92+ file categorizzati per priorità</li>
+    <li>Stima sforzo per ogni file</li>
+    <li>Ordine di migrazione raccomandato</li>
+    <li>Matrice rischi per componente</li>
+    <li>Requisiti di test per componente</li>
+    <li><strong>Sforzo Totale</strong>: 54-78 ore</li>
+  </ul>
+  <h2>Benefici Chiave della Migrazione</h2>
+  <h3>1. Supporto XLSX ✅ (Obiettivo Primario)</h3>
+  <ul>
+    <li>Lettura e scrittura nativa di file Excel moderni</li>
+    <li>Niente più workaround via reflection</li>
+    <li>Migliori prestazioni e affidabilità</li>
+  </ul>
+  <h3>2. API Moderna</h3>
+  <ul>
+    <li>Gestione errori migliorata</li>
+    <li>Migliore gestione memoria</li>
+    <li>API streaming per file grandi (100K+ righe)</li>
+    <li>Valutazione formule avanzata</li>
+  </ul>
+  <h3>3. Manutenzione Attiva</h3>
+  <ul>
+    <li>Aggiornamenti di sicurezza regolari</li>
+    <li>Bugfix</li>
+    <li>Supporto dalla community</li>
+  </ul>
+  <h3>4. Miglioramenti Prestazionali</h3>
+  <ul>
+    <li>I/O file ottimizzato</li>
+    <li>Migliore uso memoria con streaming</li>
+    <li>Applicazione stili più veloce</li>
+  </ul>
+  <h2>Quali Cambi Sono Necessari?</h2>
+  <h3>Cambiamenti Bloccanti (Richiedono Aggiornamento Codice)</h3>
+  <ol>
+    <li><strong>Region → CellRangeAddress</strong></li>
+    <li><strong>HSSFColor → IndexedColors</strong></li>
+    <li><strong>Costanti Tipo Cella → Enum</strong></li>
+    <li><strong>Costanti Stile → Enum</strong></li>
+    <li><strong>HSSFDateUtil → DateUtil</strong></li>
+  </ol>
+  <h3>Nuove Funzionalità Abilitate</h3>
+  <ul>
+    <li>File XLSX</li>
+    <li>Codice agnostico al formato</li>
+    <li>Gestione risorse migliorata</li>
+  </ul>
+  <h2>Aree Coinvolte</h2>
+  <h3>Componenti Core (IMPATTO ALTO)</h3>
+  <ul>
+    <li>RdsUtil.poi: Classi di utilità usate ovunque (3 file)</li>
+    <li>SpoolViewer: Motore rendering Excel (10 file)</li>
+    <li>Query Creator: Funzionalità export (2 file)</li>
+  </ul>
+  <h3>Implementazioni Clienti (IMPATTO MEDIO)</h3>
+  <ul>
+    <li>Righi: Report statistici (22 file)</li>
+    <li>Commdado: Workflow RDO, e-pub (12 file)</li>
+    <li>Findomestic: Import massivi (8 file)</li>
+    <li>Altri: Sammontana, Hyundai, Spinelli, ecc. (15 file)</li>
+  </ul>
+  <h3>Utility (IMPATTO BASSO)</h3>
+  <ul>
+    <li>Converter, file di test, utility varie (40+ file)</li>
+  </ul>
+  <h2>Valutazione dei Rischi</h2>
+  <h3>Rischi Alti (Mitigati)</h3>
+  <ol>
+    <li>Cambi API Bloccanti</li>
+    <li>Impatto su Codice Cliente</li>
+    <li>Codice Reflection XLSX</li>
+  </ol>
+  <h3>Rischi Medi</h3>
+  <ul>
+    <li>Cambi prestazionali (mitigati con test)</li>
+    <li>Consumo memoria (mitigato con API streaming)</li>
+  </ul>
+  <h3>Rischi Bassi</h3>
+  <ul>
+    <li>Conflitti dipendenze (risolti in Fase 1)</li>
+    <li>Aumento dimensione WAR (accettabile)</li>
+  </ul>
+  <h2>Timeline & Sforzo</h2>
+  <pre>
+Settimana 1: Componenti Core
+  ├─ Giorno 1-2: Aggiorna dipendenze, correggi utility core
+  └─ Giorno 5: Query Creator
+
+Settimana 2: Codice Cliente & XLSX
+  ├─ Giorno 1-2: Handler XLSX (rimuovi reflection)
+  └─ Giorno 5: Altri clienti
+
+Settimana 3: Test & Deploy
+  ├─ Giorno 1-2: Test unitari & integrazione
+  └─ Giorno 5: Documentazione, deploy
+
+Totale: 2-3 settimane, 2 sviluppatori
+  </pre>
+  <h2>Matrice Decisionale</h2>
+  <table border="1">
+    <tr><th>Fattore</th><th>Attuale (POI 2.0)</th><th>Dopo Migrazione (POI 5.x)</th></tr>
+    <tr><td>Supporto XLSX</td><td>❌ No</td><td>✅ Sì</td></tr>
+    <tr><td>Aggiornamenti Sicurezza</td><td>❌ Nessuno (20 anni)</td><td>✅ Regolari</td></tr>
+    <tr><td>Prestazioni</td><td>⚠️ Adeguate</td><td>✅ Migliori</td></tr>
+    <tr><td>Uso Memoria</td><td>⚠️ Alto per file grandi</td><td>✅ Streaming disponibile</td></tr>
+    <tr><td>Manutenzione</td><td>❌ Abbandonato</td><td>✅ Attivo</td></tr>
+    <tr><td>Complessità Codice</td><td>✅ Semplice (API vecchia)</td><td>⚠️ Moderna (più funzionalità)</td></tr>
+    <tr><td>Sforzo Migrazione</td><td>N/A</td><td>⚠️ 2-3 settimane</td></tr>
+    <tr><td>Rischio</td><td>⚠️ Vulnerabilità sicurezza</td><td>✅ Basso (con test)</td></tr>
+  </table>
+  <h2>Raccomandazione</h2>
+  <h3>✅ Procedere con la Migrazione</h3>
+  <ol>
+    <li>Requisito primario: supporto XLSX (manca attualmente)</li>
+    <li>Sicurezza: libreria vecchia di 20 anni senza aggiornamenti</li>
+    <li>Sforzo gestibile: 2-3 settimane con piano chiaro</li>
+    <li>Benefici a lungo termine: prestazioni migliori, manutenzione attiva</li>
+    <li>Documentazione completa: rischio ben compreso e mitigato</li>
+  </ol>
+  <h3>Approccio di Implementazione</h3>
+  <ul>
+    <li><strong>Opzione A: Migrazione Completa (Consigliata)</strong></li>
+    <li>Migra direttamente a POI 5.2.5</li>
+    <li>Implementa tutti i cambi bloccanti insieme</li>
+    <li>Test completi prima del rilascio</li>
+    <li>Timeline: 2-3 settimane</li>
+  </ul>
+  <ul>
+    <li><strong>Opzione B: Approccio Fasi</strong></li>
+    <li>Fase 1: Aggiorna solo dipendenze (supporto XLSX in parallelo)</li>
+    <li>Fase 2: Migra codice gradualmente</li>
+    <li>Timeline: 3-4 settimane (più conservativo)</li>
+  </ul>
+  <ul>
+    <li><strong>Opzione C: Nessuna Migrazione</strong></li>
+    <li>Mantieni POI 2.0</li>
+    <li>NESSUN supporto XLSX</li>
+    <li>Prosegui con rischi di sicurezza</li>
+    <li>Non consigliato ❌</li>
+  </ul>
+  <h2>Prossimi Passi</h2>
+  <ol>
+    <li><strong>Settimana 0 (Preparazione)</strong></li>
+    <li>Revisiona documentazione</li>
+    <li>Crea branch feature</li>
+    <li><strong>Settimana 1-3 (Implementazione)</strong></li>
+    <li>Esegui le fasi di migrazione</li>
+    <li>Validazione clienti</li>
+    <li><strong>Settimana 4 (Deploy)</strong></li>
+    <li>Test finale</li>
+    <li>Monitoraggio produzione</li>
+  </ol>
+  <h2>Domande da Affrontare</h2>
+  <ol>
+    <li><strong>Priorità Business</strong>: Il supporto XLSX è critico per il business?</li>
+    <li><strong>Disponibilità Risorse</strong>: 2 sviluppatori possono dedicare 2-3 settimane?</li>
+    <li><strong>Dati di Test</strong>: Abbiamo dati di test rappresentativi per tutti i clienti?</li>
+  </ol>
+</main>
+</body>
+</html>

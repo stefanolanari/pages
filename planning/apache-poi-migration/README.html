@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Documentazione Migrazione Apache POI</title>
+  <style>
+    body {
+      background: #181a1b;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+    }
+    main {
+      max-width: 900px;
+      margin: 32px auto;
+      background: #232527;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px #0006;
+      padding: 32px 40px;
+    }
+    h1, h2, h3, h4 {
+      color: #90caf9;
+      margin-top: 1.5em;
+    }
+    h1 {
+      font-size: 2.2em;
+      margin-bottom: 0.5em;
+    }
+    h2 {
+      font-size: 1.5em;
+      border-bottom: 1px solid #333;
+      padding-bottom: 0.2em;
+    }
+    a {
+      color: #64b5f6;
+      text-decoration: underline;
+      transition: color 0.2s;
+    }
+    a:hover {
+      color: #ffb74d;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #222;
+      margin: 1em 0;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    th {
+      background: #263238;
+      color: #90caf9;
+    }
+    tr:nth-child(even) {
+      background: #212121;
+    }
+    ul, ol {
+      margin-left: 2em;
+    }
+    pre, code {
+      background: #212121;
+      color: #ffd54f;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 1em;
+      font-family: 'Fira Mono', 'Consolas', monospace;
+      overflow-x: auto;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #333;
+      margin: 2em 0;
+    }
+    .emoji {
+      font-size: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Documentazione Migrazione Apache POI</h1>
+  <p>Questa directory contiene la documentazione completa per la migrazione da Apache POI 2.0 ad Apache POI 5.x per abilitare il supporto XLSX.</p>
+  <h2>📚 Struttura della Documentazione</h2>
+  <h3>1. <a href="apache-poi-executive-summary.html">Sintesi Esecutiva</a></h3>
+  <p><strong>Inizia qui se sei un decisore</strong></p>
+  <ul>
+    <li>Panoramica rapida che include:</li>
+    <li>Confronto stato attuale vs. stato target</li>
+    <li>Benefici chiave della migrazione</li>
+    <li>Valutazione rischi e mitigazioni</li>
+    <li>Stima tempi e sforzo (2-3 settimane)</li>
+    <li>Raccomandazione e prossimi passi</li>
+  </ul>
+  <p><strong>Destinatari</strong>: Project manager, responsabili tecnici, stakeholder</p>
+  <hr>
+  <h3>2. <a href="apache-poi-migration-plan.html">Piano di Migrazione</a></h3>
+  <p><strong>Panoramica strategica e roadmap di esecuzione</strong></p>
+  <ul>
+    <li>Analisi stato attuale (100+ file coinvolti)</li>
+    <li>Versione target: Apache POI 5.2.5</li>
+    <li>Strategia di implementazione in 4 fasi:</li>
+    <ul>
+      <li>Fase 1: Dipendenze (1-2 giorni)</li>
+      <li>Fase 2: Migrazione codice (3-5 giorni)</li>
+      <li>Fase 3: Test (3-5 giorni)</li>
+      <li>Fase 4: Documentazione & Deploy (1-2 giorni)</li>
+    </ul>
+    <li>Matrice di valutazione rischi</li>
+    <li>Criteri di successo e piano di rollback</li>
+    <li>Requisiti risorse</li>
+  </ul>
+  <p><strong>Destinatari</strong>: Project manager, responsabili tecnici, architetti</p>
+  <hr>
+  <h3>3. <a href="apache-poi-code-migration-guide.html">Guida Migrazione Codice</a></h3>
+  <p><strong>Manuale per sviluppatori sulle trasformazioni di codice</strong></p>
+  <ul>
+    <li>Guida tecnica dettagliata con:</li>
+    <li>Riferimento rapido per trasformazioni POI 2.0 → 5.x</li>
+    <li>11 esempi dettagliati di cambi pattern di codice con esempi prima/dopo</li>
+    <li>Mappatura degli import</li>
+    <li>Errori di compilazione comuni e soluzioni</li>
+    <li>Funzionalità specifiche XLSX (nuove capacità)</li>
+    <li>Strategia di test e template di test unitari</li>
+    <li>Consigli per ottimizzazione prestazioni</li>
+  </ul>
+  <p><strong>Destinatari</strong>: Sviluppatori che implementano la migrazione</p>
+  <hr>
+  <h3>4. <a href="apache-poi-file-impact-analysis.html">Analisi Impatto File</a></h3>
+  <p><strong>Dettaglio del lavoro richiesto per componente</strong></p>
+  <ul>
+    <li>Analisi per componente:</li>
+    <li>92+ file categorizzati per priorità (Alta/Media/Bassa)</li>
+    <li>Stima sforzo per ogni file</li>
+    <li>Descrizione componenti e dipendenze</li>
+    <li>Ordine di migrazione raccomandato</li>
+    <li>Matrice rischi per componente</li>
+    <li>Requisiti di test per componente</li>
+    <li>Sforzo totale: 54-78 ore</li>
+  </ul>
+  <p><strong>Destinatari</strong>: Sviluppatori, responsabili tecnici, QA</p>
+  <hr>
+  <h2>🎯 Guida Rapida</h2>
+  <h3>Per Stakeholder</h3>
+  <ol>
+    <li>Leggi: <a href="apache-poi-executive-summary.html">Sintesi Esecutiva</a></li>
+    <li>Decisione: Approvare la migrazione?</li>
+    <li>Se approvata, consulta <a href="apache-poi-migration-plan.html">Piano di Migrazione</a> per la timeline</li>
+  </ol>
+  <h3>Per Responsabili Tecnici</h3>
+  <ol>
+    <li>Leggi: <a href="apache-poi-executive-summary.html">Sintesi Esecutiva</a></li>
+    <li>Consulta: <a href="apache-poi-migration-plan.html">Piano di Migrazione</a> per la strategia</li>
+    <li>Studia: <a href="apache-poi-file-impact-analysis.html">Analisi Impatto File</a> per la suddivisione del lavoro</li>
+    <li>Assegna: 2 sviluppatori per 2-3 settimane</li>
+  </ol>
+  <h3>Per Sviluppatori</h3>
+  <ol>
+    <li>Leggi: <a href="apache-poi-code-migration-guide.html">Guida Migrazione Codice</a> - il tuo riferimento principale</li>
+    <li>Consulta: <a href="apache-poi-file-impact-analysis.html">Analisi Impatto File</a> per i file da aggiornare</li>
+    <li>Segui: Ordine di migrazione nell'analisi impatto</li>
+    <li>Testa: Usa i template di test unitari dalla guida codice</li>
+  </ol>
+  <h3>Per QA/Test</h3>
+  <ol>
+    <li>Consulta: Sezioni di test in <a href="apache-poi-migration-plan.html">Piano di Migrazione</a></li>
+    <li>Consulta: Requisiti di test in <a href="apache-poi-file-impact-analysis.html">Analisi Impatto File</a></li>
+    <li>Prepara: Dati di test per tutte le implementazioni cliente</li>
+  </ol>
+  <hr>
+  <h2>📊 Statistiche Chiave</h2>
+  <ul>
+    <li><strong>Versione Attuale</strong>: Apache POI 2.0-final-20040126 (Gennaio 2004)</li>
+    <li><strong>Versione Target</strong>: Apache POI 5.2.5 (2023)</li>
+    <li><strong>File Coinvolti</strong>: 92+ file Java</li>
+    <li><strong>Cambi Bloccanti</strong>: 5 cambi API principali</li>
+    <li><strong>Nuova Capacità</strong>: Supporto file XLSX ✨</li>
+    <li><strong>Sforzo Stimato</strong>: 54-78 ore (2-3 settimane)</li>
+    <li><strong>Team</strong>: 2 sviluppatori</li>
+    <li><strong>Livello Rischio</strong>: Medio (mitigato con test)</li>
+  </ul>
+  <hr>
+  <h2>🔄 Fasi della Migrazione</h2>
+  <pre>
+Fase 1: Dipendenze (1-2 giorni)
+├─ Aggiorna pom.xml a POI 5.2.5
+├─ Aggiungi dipendenza poi-ooxml
+└─ Verifica sicurezza dipendenze
+
+Fase 2: Migrazione Codice (3-5 giorni)
+├─ Aggiorna utility core (RdsUtil.poi)
+├─ Aggiorna handler SpoolViewer
+├─ Aggiorna Query Creator
+├─ Aggiorna implementazioni cliente
+└─ Rimuovi codice reflection XLSX
+
+Fase 3: Test (3-5 giorni)
+├─ Test unitari
+├─ Test di integrazione
+├─ Validazione cliente
+└─ Test prestazionali
+
+Fase 4: Documentazione & Deploy (1-2 giorni)
+├─ Aggiorna documentazione inline
+├─ Crea guida migrazione per clienti
+└─ Rollout graduale
+  </pre>
+  <hr>
+  <h2>⚠️ Cambi Bloccanti</h2>
+  <table border="1">
+    <tr><th>Cambio</th><th>File Coinvolti</th><th>Sforzo</th></tr>
+    <tr><td>Region → CellRangeAddress</td><td>~20 file</td><td>Basso</td></tr>
+    <tr><td>HSSFColor → IndexedColors</td><td>~50 file</td><td>Medio</td></tr>
+    <tr><td>Costanti tipo cella → enum CellType</td><td>~30 file</td><td>Basso</td></tr>
+    <tr><td>Costanti stile → tipi Enum</td><td>~40 file</td><td>Medio</td></tr>
+    <tr><td>HSSFDateUtil → DateUtil</td><td>~10 file</td><td>Basso</td></tr>
+  </table>
+  <hr>
+  <h2>✅ Criteri di Successo</h2>
+  <ol>
+    <li>Tutto il codice compila senza errori POI</li>
+    <li>Tutte le operazioni XLS esistenti funzionano come prima</li>
+    <li>Il supporto file XLSX è funzionante (NUOVO)</li>
+    <li>Prestazioni entro il 20% del baseline</li>
+    <li>Tutte le implementazioni cliente passano i test di regressione</li>
+    <li>Nessuna vulnerabilità di sicurezza</li>
+    <li>Documentazione completa</li>
+  </ol>
+  <hr>
+  <h2>🚀 Benefici della Migrazione</h2>
+  <h3>Obiettivo Primario</h3>
+  <p>✅ <strong>Supporto XLSX</strong>: Lettura e scrittura di file Excel moderni</p>
+  <h3>Benefici Aggiuntivi</h3>
+  <ul>
+    <li>🔒 <strong>Sicurezza</strong>: Manutenzione e aggiornamenti attivi</li>
+    <li>⚡ <strong>Prestazioni</strong>: Migliore gestione memoria</li>
+    <li>🎯 <strong>API Streaming</strong>: Gestione file grandi (100K+ righe)</li>
+    <li>🔧 <strong>API Moderna</strong>: Gestione errori migliorata</li>
+    <li>📈 <strong>Supporto Formule</strong>: Valutazione avanzata</li>
+    <li>🌐 <strong>Community</strong>: Supporto e documentazione attivi</li>
+  </ul>
+  <hr>
+  <h2>📋 Checklist Pre-Migrazione</h2>
+  <ul>
+    <li>Approvazione stakeholder ottenuta</li>
+    <li>2 sviluppatori assegnati (1 senior + 1 mid-level)</li>
+    <li>Ambiente di test predisposto</li>
+    <li>Dati di test rappresentativi raccolti dai clienti</li>
+    <li>Branch feature creato: <code>feature/poi-upgrade</code></li>
+    <li>Piano di rollback rivisto e compreso</li>
+    <li>Piano di comunicazione clienti preparato</li>
+  </ul>
+  <hr>
+  <h2>📞 Domande o Problemi?</h2>
+  <p>Se hai domande su:</p>
+  <ul>
+    <li><strong>Strategia/Timeline</strong>: Vedi <a href="apache-poi-migration-plan.html">Piano di Migrazione</a></li>
+    <li><strong>Cambi Codice</strong>: Vedi <a href="apache-poi-code-migration-guide.html">Guida Migrazione Codice</a></li>
+    <li><strong>File Specifici</strong>: Vedi <a href="apache-poi-file-impact-analysis.html">Analisi Impatto File</a></li>
+    <li><strong>Decisioni</strong>: Vedi <a href="apache-poi-executive-summary.html">Sintesi Esecutiva</a></li>
+  </ul>
+  <hr>
+  <h2>📝 Stato Documento</h2>
+  <ul>
+    <li><strong>Versione</strong>: 1.0</li>
+    <li><strong>Ultimo Aggiornamento</strong>: 07/01/2026</li>
+    <li><strong>Autore</strong>: GitHub Copilot</li>
+    <li><strong>Stato</strong>: ✅ Pronto per Revisione</li>
+    <li><strong>Prossima Azione</strong>: Approvazione stakeholder</li>
+  </ul>
+  <hr>
+  <h2>🔗 Risorse Correlate</h2>
+  <h3>Documentazione Esterna</h3>
+  <ul>
+    <li><a href="https://poi.apache.org/">Sito Ufficiale Apache POI</a></li>
+    <li><a href="https://poi.apache.org/apidocs/5.0/">Documentazione API POI 5.x</a></li>
+    <li><a href="https://poi.apache.org/changes.html">Guida Migrazione POI</a></li>
+  </ul>
+  <h3>File di Progetto</h3>
+  <ul>
+    <li><code>pom.xml</code> - Dipendenze attuali</li>
+    <li><code>src/main/java/com/rds_software/RdsUtil/poi/</code> - Utility core</li>
+    <li><code>src/main/java/spoolviewer/excel/</code> - Handler Excel</li>
+  </ul>
+  <p><strong>Buona Migrazione! 🎉</strong></p>
+</main>
+</body>
+</html>

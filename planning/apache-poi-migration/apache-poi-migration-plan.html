@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Piano di Migrazione Apache POI</title>
+  <link rel="stylesheet" href="style-dark.css">
+</head>
+<body>
+<main>
+  <h1>Piano di Migrazione Apache POI</h1>
+  <h2>Sintesi Esecutiva</h2>
+  <p>Questo documento descrive la strategia di migrazione da Apache POI 2.0-final-20040126 ad Apache POI 5.x per abilitare il supporto XLSX e modernizzare la gestione Excel dell'applicazione rdsv6.</p>
+  <h2>Stato Attuale</h2>
+  <h3>Informazioni sulla Versione</h3>
+  <ul>
+    <li><strong>Versione Attuale</strong>: Apache POI 2.0-final-20040126 (rilasciato a gennaio 2004)</li>
+    <li><strong>Età</strong>: ~20 anni</li>
+    <li><strong>Supporto Formati</strong>: Solo XLS (HSSF) - NESSUN supporto XLSX</li>
+    <li><strong>Dipendenze</strong>: Singolo file JAR (619 KB)</li>
+  </ul>
+  <h3>Analisi d'Uso</h3>
+  <p>POI è utilizzato estensivamente nel codice con <strong>100+ file</strong> che importano classi Apache POI:</p>
+  <ul>
+    <li><strong>Aree Core</strong>:
+      <ul>
+        <li>SpoolViewer (spoolviewer/excel/): Handler XLS, RenderingContext</li>
+        <li>Query Creator (querycreator/): HSSFWorkbookCreator, QueryCreator</li>
+        <li>Classi di Utility (com.rds_software.RdsUtil.poi/): PoiHelper, CellStyle, CellBorder</li>
+        <li>Implementazioni Specifiche Cliente (50+ clienti): Righi, Commdado, Findomestic, Hyundai, Spinelli, Pavimental, CAV</li>
+        <li>Utility Comuni: ExcelConverter, ExcelConverterMultiPages</li>
+      </ul>
+    </li>
+    <li><strong>Principali Classi POI Usate</strong>:
+      <ul>
+        <li>HSSFWorkbook, HSSFSheet, HSSFRow, HSSFCell</li>
+        <li>HSSFCellStyle, HSSFDataFormat, HSSFFont</li>
+        <li>HSSFColor - Costanti colore</li>
+        <li>POIFSFileSystem - Gestione file system</li>
+        <li>Region - Unione celle (DEPRECATA)</li>
+        <li>HSSFDateUtil - Gestione date</li>
+      </ul>
+    </li>
+  </ul>
+  <h2>Stato Target</h2>
+  <h3>Versione Raccomandata: Apache POI 5.2.5 o 5.3.0</h3>
+  <ul>
+    <li><strong>Supporto XLSX</strong>: Supporto completo al formato Excel moderno via OOXML</li>
+    <li><strong>Manutenzione Attiva</strong>: Aggiornamenti di sicurezza regolari</li>
+    <li><strong>Compatibilità Java 8</strong>: In linea con il requisito Java 8 del progetto</li>
+    <li><strong>API Matura</strong>: Interfacce stabili dopo refactoring importanti</li>
+    <li><strong>Prestazioni</strong>: Migliore gestione memoria per file grandi</li>
+  </ul>
+  <h3>Nuove Funzionalità</h3>
+  <ul>
+    <li>Lettura/scrittura nativa XLSX (senza reflection)</li>
+    <li>API streaming (SXSSFWorkbook) per file grandi</li>
+    <li>Migliore valutazione formule</li>
+    <li>Validazione dati avanzata</li>
+    <li>Opzioni di stile migliorate</li>
+  </ul>
+  <h2>Strategia di Migrazione</h2>
+  <h3>Fase 1: Aggiornamento Dipendenze (Stima: 1-2 giorni)</h3>
+  <ol>
+    <li>Aggiorna pom.xml</li>
+    <li>Aggiungi Dipendenze Transitivi</li>
+    <li>Verifica Sicurezza</li>
+  </ol>
+  <h3>Fase 2: Migrazione Codice (Stima: 3-5 giorni)</h3>
+  <ol>
+    <li>Aggiornamento Import</li>
+    <li>File da Aggiornare</li>
+    <li>Aggiornamenti Handler XLSX</li>
+  </ol>
+  <h3>Fase 3: Strategia di Test (Stima: 3-5 giorni)</h3>
+  <ol>
+    <li>Test Unitari</li>
+    <li>Test di Integrazione</li>
+    <li>Test di Regressione</li>
+    <li>Test Prestazionali</li>
+  </ol>
+  <h3>Fase 4: Documentazione & Deploy (Stima: 1-2 giorni)</h3>
+  <ol>
+    <li>Documentazione Codice</li>
+    <li>Guida Migrazione</li>
+    <li>Strategia di Deploy</li>
+  </ol>
+  <h2>Valutazione dei Rischi</h2>
+  <h3>Elementi ad Alto Rischio</h3>
+  <ol>
+    <li>Cambi API Bloccanti</li>
+    <li>Rimozione Classe Region</li>
+    <li>Compatibilità Codice Cliente</li>
+  </ol>
+  <h3>Elementi a Medio Rischio</h3>
+  <ol>
+    <li>Codice Reflection XLSX</li>
+    <li>Cambi Prestazionali</li>
+  </ol>
+</main>
+</body>
+</html>
