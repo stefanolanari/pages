@@ -430,6 +430,39 @@
                 });
             }
 
+            // INPUT RESTRICTION
+            if (config.validation?.inputRestriction?.blockInvalid && config.validation.inputRestriction.allowedChars) {
+                const restrictionRx = new RegExp(config.validation.inputRestriction.allowedChars);
+
+                input.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey || e.metaKey || e.altKey) return;
+                    const controlKeys = ['Backspace', 'Delete', 'Tab', 'Enter',
+                        'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
+                    if (controlKeys.includes(e.key)) return;
+                    if (e.key.length === 1 && !restrictionRx.test(e.key)) {
+                        e.preventDefault();
+                        log(`Carattere '${e.key}' bloccato da inputRestriction (${config.class}).`, 'warning');
+                    }
+                });
+
+                input.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    const pasted = (e.clipboardData || window.clipboardData).getData('text');
+                    const filtered = pasted.split('').filter(c => restrictionRx.test(c)).join('');
+                    const start = input.selectionStart;
+                    const end = input.selectionEnd;
+                    const proposed = input.value.slice(0, start) + filtered + input.value.slice(end);
+                    if (restrictionRx.test(proposed)) {
+                        input.value = proposed;
+                        input.setSelectionRange(start + filtered.length, start + filtered.length);
+                        input.dispatchEvent(new Event('input'));
+                    }
+                    if (filtered !== pasted) {
+                        log(`Caratteri non consentiti rimossi dal testo incollato (${config.class}).`, 'warning');
+                    }
+                });
+            }
+
             input.addEventListener('input', () => {
                 const val = input.value;
                 input.style.color = "";
