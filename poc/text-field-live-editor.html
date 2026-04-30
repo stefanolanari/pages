@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmeUP Text Field Playground</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'Fira Code', monospace; }
+
+        .variant-outline {
+            border: 1px solid #cbd5e1;
+            background-color: white;
+            transition: all 0.2s ease;
+        }
+        .variant-outline:focus-within {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .variant-filled {
+            background-color: #f8fafc;
+            border-bottom: 2px solid #94a3b8;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .variant-filled:focus-within {
+            background-color: #f1f5f9;
+            border-bottom-color: #3b82f6;
+        }
+
+        .field-container {
+            display: flex;
+            align-items: center;
+            min-height: 64px;
+            padding: 0 16px;
+            position: relative;
+        }
+
+        .label-inside {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: -2px;
+        }
+
+        .error-state { border-color: #ef4444 !important; }
+        
+        .helper-btn {
+            color: #94a3b8;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .helper-btn:hover {
+            background-color: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .color-swatch {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 2px solid white;
+            box-shadow: 0 0 0 1px #e2e8f0;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .overlay-picker {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            padding: 0;
+            border: none;
+        }
+
+        #validation-toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 50;
+        }
+        #validation-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Stile Editor */
+        .json-editor {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            width: 100%;
+            height: 320px;
+            padding: 1rem;
+            outline: none;
+            border: 2px solid transparent;
+            resize: none;
+            transition: border-color 0.2s;
+        }
+        .json-editor:focus {
+            border-color: #3b82f6;
+        }
+        .json-editor.invalid {
+            border-color: #ef4444;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen pb-20">
+
+    <div class="max-w-6xl mx-auto p-6 md:p-12">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="bg-blue-600 p-2 rounded-lg text-white">
+                    <i data-lucide="code-2" class="w-6 h-6"></i>
+                </div>
+                <h1 class="text-3xl font-extrabold tracking-tight text-slate-800">SmeUP Text Field <span class="text-blue-600 underline decoration-blue-200">Live Editor</span></h1>
+            </div>
+            <p class="text-slate-500 text-lg">Modifica i JSON a destra per aggiornare l'anteprima a sinistra in tempo reale.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            
+            <!-- Colonna UI (Anteprima) -->
+            <div class="space-y-12">
+                <section>
+                    <h2 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
+                        <span class="w-8 h-px bg-slate-200"></span> Live Components
+                    </h2>
+                    
+                    <div id="components-container" class="space-y-10 min-h-[200px]">
+                        <!-- Caricamento dinamico qui -->
+                    </div>
+                </section>
+
+                <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i data-lucide="terminal" class="w-4 h-4 text-blue-500"></i> Event Log
+                    </h3>
+                    <div id="event-log" class="space-y-2 h-48 overflow-y-auto text-[11px] mono text-slate-600 border-t pt-4">
+                        <div class="text-blue-500 italic">Laboratorio pronto per le modifiche.</div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Colonna Editor (JSON) -->
+            <div class="space-y-8">
+                <section>
+                    <h2 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Editor Configurazioni</h2>
+                    <div class="space-y-6">
+                        <div class="relative">
+                            <div class="flex justify-between items-center mb-2 px-1">
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-tighter">D8 - Data Specification</span>
+                                <span id="status-d8" class="text-[10px] font-bold text-green-500 px-2 py-0.5 bg-green-50 rounded-full">VALID JSON</span>
+                            </div>
+                            <textarea id="editor-d8" class="json-editor mono" spellcheck="false"></textarea>
+                        </div>
+                        
+                        <div class="relative">
+                            <div class="flex justify-between items-center mb-2 px-1">
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-tighter">J1COL - Color Specification</span>
+                                <span id="status-j1col" class="text-[10px] font-bold text-green-500 px-2 py-0.5 bg-green-50 rounded-full">VALID JSON</span>
+                            </div>
+                            <textarea id="editor-j1col" class="json-editor mono" spellcheck="false"></textarea>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast UI -->
+    <div id="validation-toast" class="bg-red-600 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 min-w-[320px]">
+        <div class="bg-white/20 p-2 rounded-full">
+            <i data-lucide="alert-circle" class="w-5 h-5"></i>
+        </div>
+        <div>
+            <p class="font-bold text-sm">Errore di Validazione</p>
+            <p id="toast-message" class="text-xs opacity-90"></p>
+        </div>
+    </div>
+
+    <script>
+        // --- DATASET INITIAL ---
+        let currentConfigs = {
+            D8: {
+                "class": "D8",
+                "ui": {
+                    "variant": "outline",
+                    "label": { "visible": true, "text": "Data Consegna Progetto", "position": "top" },
+                    "placeholder": "GG/MM/AAAA",
+                    "condFormatting": [
+                        {
+                            "rule": "value < today",
+                            "style": { "color": "#ef4444", "fontWeight": "bold" }
+                        }
+                    ]
+                },
+                "widget": { "type": "date-picker", "icon": "calendar" },
+                "validation": {
+                    "inputRestriction": { "allowedChars": "^[0-9/]*$", "blockInvalid": true },
+                    "clientSide": { "regex": "^[0-9]{2}/[0-9]{2}/[0-9]{4}$", "errorMessage": "Formato non valido" },
+                    "serverSide": { "validationObject": "J1;VALCLS;CheckFestivi", "validateOn": "blur" }
+                },
+                "behavior": {
+                    "helpers": [
+                        { "type": "today-shortcut", "icon": "clock", "tooltip": "Metti oggi" },
+                        { "type": "mic", "icon": "mic", "tooltip": "Dettatura vocale" }
+                    ]
+                }
+            },
+            J1COL: {
+                "class": "J1COL",
+                "ui": {
+                    "variant": "filled",
+                    "label": { "visible": true, "text": "Colore Brand Principale", "position": "inside" },
+                    "placeholder": "#HEXCODE",
+                    "condFormatting": [
+                        {
+                            "rule": "value.startsWith('#')",
+                            "style": { "borderLeft": "12px solid value" }
+                        }
+                    ]
+                },
+                "widget": { "type": "color-input", "icon": "palette" },
+                "validation": {
+                    "inputRestriction": { "allowedChars": "^[#a-fA-F0-9]*$", "blockInvalid": true },
+                    "clientSide": { "regex": "^#([A-Fa-f0-9]{6})$", "errorMessage": "Codice HEX errato" }
+                },
+                "behavior": {
+                    "helpers": [
+                        { "type": "copy", "icon": "copy", "tooltip": "Copia" }
+                    ]
+                }
+            }
+        };
+
+        // --- UTILS ---
+        function log(msg, type = 'info') {
+            const logEl = document.getElementById('event-log');
+            const entry = document.createElement('div');
+            const colors = {
+                error: 'text-red-500',
+                success: 'text-green-600',
+                warning: 'text-amber-600',
+                info: 'text-slate-600'
+            };
+            entry.className = `pb-1 border-b border-slate-100 last:border-0 ${colors[type] || colors.info}`;
+            entry.innerHTML = `<span class="opacity-40">[${new Date().toLocaleTimeString()}]</span> ${msg}`;
+            logEl.prepend(entry);
+        }
+
+        function notify(msg) {
+            const toast = document.getElementById('validation-toast');
+            document.getElementById('toast-message').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 4000);
+        }
+
+        function toIT(isoDate) {
+            if (!isoDate) return "";
+            const [y, m, d] = isoDate.split('-');
+            return `${d}/${m}/${y}`;
+        }
+        function toISO(itDate) {
+            if (!itDate || itDate.length < 10) return "";
+            const [d, m, y] = itDate.split('/');
+            return `${y}-${m}-${d}`;
+        }
+
+        async function serverValidateDate(val) {
+			log(`Validazione server per: ${val}...`);
+			
+			// Simulazione latenza network
+			await new Promise(r => setTimeout(r, 600));
+
+			const [d, m, y] = val.split('/').map(Number);
+			const date = new Date(y, m - 1, d);
+
+			// 1. Verifica che la data esista davvero (es. evita il 31 aprile)
+			if (isNaN(date.getTime()) || date.getDate() !== d || date.getMonth() !== m - 1) {
+				return { ok: false, msg: "Data non esistente." };
+			}
+
+			// 2. Verifica Weekend (Sabato = 6, Domenica = 0)
+			const dayOfWeek = date.getDay();
+			if (dayOfWeek === 0 || dayOfWeek === 6) {
+				return { ok: false, msg: "Chiuso nel weekend." };
+			}
+
+			// 3. Elenco festività fisse italiane (giorno/mese)
+			const festivi = [
+				"1/1",   // Capodanno
+				"6/1",   // Epifania
+				"25/4",  // Liberazione
+				"1/5",   // Festa del Lavoro
+				"2/6",   // Festa della Repubblica
+				"15/8",  // Ferragosto
+				"1/11",  // Ognissanti
+				"8/12",  // Immacolata
+				"25/12", // Natale
+				"26/12"  // Santo Stefano
+			];
+
+			if (festivi.includes(`${d}/${m}`)) {
+				return { ok: false, msg: "Giorno festivo (chiuso)." };
+			}
+
+			return { ok: true };
+		}
+
+        // --- ENGINE ---
+        function buildComponent(config) {
+            const wrap = document.createElement('div');
+            wrap.className = "group transition-all duration-300";
+            wrap.setAttribute('data-class', config.class);
+
+            if (config.ui.label.visible && config.ui.label.position === 'top') {
+                const l = document.createElement('label');
+                l.className = "text-xs font-bold text-slate-400 mb-2 block ml-1 uppercase tracking-tighter";
+                l.textContent = config.ui.label.text;
+                wrap.appendChild(l);
+            }
+
+            const container = document.createElement('div');
+            container.className = `field-container variant-${config.ui.variant} rounded-lg`;
+            
+            const leading = document.createElement('div');
+            leading.className = "mr-4 flex items-center justify-center relative";
+            
+            let hiddenPicker;
+
+            if (config.widget.type === 'color-input') {
+                const swatch = document.createElement('div');
+                swatch.className = "color-swatch bg-slate-200";
+                swatch.id = `swatch-${config.class}`;
+                
+                hiddenPicker = document.createElement('input');
+                hiddenPicker.type = "color";
+                hiddenPicker.className = "overlay-picker";
+                swatch.appendChild(hiddenPicker);
+                leading.appendChild(swatch);
+            } else {
+                leading.className += " text-slate-400 group-focus-within:text-blue-500 transition-colors";
+                leading.innerHTML = `<i data-lucide="${config.widget.icon}" class="w-5 h-5"></i>`;
+                
+                if (config.widget.type === 'date-picker') {
+                    hiddenPicker = document.createElement('input');
+                    hiddenPicker.type = "date";
+                    hiddenPicker.className = "overlay-picker";
+                    leading.appendChild(hiddenPicker);
+                }
+            }
+            container.appendChild(leading);
+
+            const center = document.createElement('div');
+            center.className = "flex-grow flex flex-col justify-center h-full";
+            
+            if (config.ui.label.visible && config.ui.label.position === 'inside') {
+                const il = document.createElement('span');
+                il.className = "label-inside";
+                il.textContent = config.ui.label.text;
+                center.appendChild(il);
+            }
+
+            const input = document.createElement('input');
+            input.className = "bg-transparent border-none outline-none w-full text-slate-800 placeholder:text-slate-300 font-semibold text-lg";
+            input.placeholder = config.ui.placeholder || "";
+            center.appendChild(input);
+            container.appendChild(center);
+
+            const trailing = document.createElement('div');
+            trailing.className = "flex gap-1 ml-2 border-l pl-2 border-slate-200 h-8 items-center relative z-10";
+            if (config.behavior && config.behavior.helpers) {
+                config.behavior.helpers.forEach(h => {
+                    const b = document.createElement('button');
+                    b.className = "helper-btn hover:bg-blue-50 hover:text-blue-600";
+                    b.title = h.tooltip;
+                    b.innerHTML = `<i data-lucide="${h.icon}" class="w-4 h-4"></i>`;
+                    b.onclick = (e) => {
+                        e.stopPropagation();
+                        if (h.type === 'today-shortcut') {
+                            input.value = new Date().toLocaleDateString('it-IT');
+                            input.dispatchEvent(new Event('input'));
+                            input.dispatchEvent(new Event('blur'));
+                        }
+                        if (h.type === 'copy') {
+                            navigator.clipboard.writeText(input.value);
+                            log(`Copiato: ${input.value}`);
+                        }
+                        if (h.type === 'mic') log(`Dettatura vocale simulata...`, 'info');
+                    }
+                    trailing.appendChild(b);
+                });
+            }
+            container.appendChild(trailing);
+            wrap.appendChild(container);
+
+            const sub = document.createElement('div');
+            sub.className = "text-[10px] text-red-500 mt-1.5 ml-1 font-bold opacity-0 transition-opacity flex items-center gap-1";
+            sub.innerHTML = `<i data-lucide="info" class="w-3 h-3"></i> <span></span>`;
+            wrap.appendChild(sub);
+
+            // LOGICA EVENTI
+            if (hiddenPicker) {
+                hiddenPicker.addEventListener('change', (e) => {
+                    let val = e.target.value;
+                    if (config.widget.type === 'date-picker') val = toIT(val);
+                    input.value = val;
+                    input.dispatchEvent(new Event('input'));
+                    input.dispatchEvent(new Event('blur'));
+                });
+            }
+
+            input.addEventListener('input', () => {
+                const val = input.value;
+                input.style.color = "";
+                input.style.fontWeight = "";
+                container.style.borderLeft = "";
+
+                if (config.widget.type === 'color-input' && /^#([A-Fa-f0-9]{6})$/.test(val)) {
+                    hiddenPicker.value = val;
+                    const sw = document.getElementById(`swatch-${config.class}`);
+                    if (sw) sw.style.backgroundColor = val;
+                }
+                
+                if (config.ui.condFormatting) {
+                    config.ui.condFormatting.forEach(cf => {
+                        let ok = false;
+                        if (cf.rule === "value < today" && val.length === 10) {
+                            const [d,m,y] = val.split('/').map(Number);
+                            if (new Date(y, m-1, d) < new Date().setHours(0,0,0,0)) ok = true;
+                        } else if (cf.rule === "value.startsWith('#')") {
+                            if (val.startsWith('#')) ok = true;
+                        }
+                        if (ok) {
+                            if (cf.style.color) input.style.color = cf.style.color === 'value' ? val : cf.style.color;
+                            if (cf.style.fontWeight) input.style.fontWeight = cf.style.fontWeight;
+                            if (cf.style.borderLeft) container.style.borderLeft = cf.style.borderLeft.replace('value', val);
+                        }
+                    });
+                }
+            });
+
+            input.addEventListener('blur', async () => {
+                if (!input.value) {
+                    container.classList.remove('error-state');
+                    sub.classList.add('opacity-0');
+                    return;
+                }
+                const crx = new RegExp(config.validation.clientSide.regex);
+                if (!crx.test(input.value)) {
+                    container.classList.add('error-state');
+                    sub.querySelector('span').textContent = config.validation.clientSide.errorMessage;
+                    sub.classList.remove('opacity-0');
+                    return;
+                }
+                if (config.validation.serverSide) {
+                    const res = await serverValidateDate(input.value);
+                    if (!res.ok) {
+                        container.classList.add('error-state');
+                        sub.querySelector('span').textContent = res.msg;
+                        sub.classList.remove('opacity-0');
+                        return;
+                    }
+                }
+                container.classList.remove('error-state');
+                sub.classList.add('opacity-0');
+            });
+
+            return wrap;
+        }
+
+        // --- RENDER ENGINE ---
+        function renderAll() {
+            const container = document.getElementById('components-container');
+            container.innerHTML = '';
+            
+            Object.values(currentConfigs).forEach(conf => {
+                container.appendChild(buildComponent(conf));
+            });
+            
+            lucide.createIcons();
+        }
+
+        // --- EDITOR LOGIC ---
+        function setupEditors() {
+            const editors = ['d8', 'j1col'];
+            
+            editors.forEach(id => {
+                const textarea = document.getElementById(`editor-${id}`);
+                const status = document.getElementById(`status-${id}`);
+                const configKey = id.toUpperCase();
+                
+                // Set initial value
+                textarea.value = JSON.stringify(currentConfigs[configKey], null, 4);
+                
+                textarea.addEventListener('input', () => {
+                    try {
+                        const newConfig = JSON.parse(textarea.value);
+                        
+                        // Validazione base
+                        if (!newConfig.class || !newConfig.ui) throw new Error("Missing required fields");
+                        
+                        currentConfigs[configKey] = newConfig;
+                        
+                        textarea.classList.remove('invalid');
+                        status.textContent = "VALID JSON";
+                        status.className = "text-[10px] font-bold text-green-500 px-2 py-0.5 bg-green-50 rounded-full";
+                        
+                        renderAll();
+                        log(`Configurazione ${configKey} aggiornata.`, 'success');
+                        
+                    } catch (e) {
+                        textarea.classList.add('invalid');
+                        status.textContent = "INVALID SYNTAX";
+                        status.className = "text-[10px] font-bold text-red-500 px-2 py-0.5 bg-red-50 rounded-full";
+                        // Non logghiamo l'errore ad ogni tasto per non intasare il terminale
+                    }
+                });
+            });
+        }
+
+        window.onload = () => {
+            setupEditors();
+            renderAll();
+        };
+    </script>
+</body>
+</html>
