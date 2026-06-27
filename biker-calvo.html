@@ -1,0 +1,529 @@
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biker Calvo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            background: #f0f0f0;
+            padding: 15px 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 5px;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        #gameCanvas {
+            display: block;
+            background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%);
+            border: 3px solid #333;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+            height: 400px;
+            cursor: none;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 24px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        #restartBtn {
+            background: #f44336;
+            color: white;
+        }
+        
+        #restartBtn:hover {
+            background: #da190b;
+            transform: scale(1.05);
+        }
+        
+        .message {
+            text-align: center;
+            font-size: 1.2em;
+            color: #f44336;
+            margin-bottom: 15px;
+            min-height: 30px;
+        }
+        
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #2196F3;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .info p {
+            margin: 5px 0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🏍️ BIKER CALVO 🏍️</h1>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Capelli</div>
+                <div class="stat-value" id="hairCount">0</div>
+                <div class="stat-label">/ 20</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Livello</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Oggetti Colpiti</div>
+                <div class="stat-value" id="hits">0</div>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas"></canvas>
+        
+        <div class="message" id="message"></div>
+        
+        <div class="controls">
+            <button id="restartBtn">🔄 Ricomincia</button>
+        </div>
+        
+        <div class="info">
+            <p>⬆️ MUOVI IL MOUSE per spostare la testa!</p>
+            <p>💥 URTA gli oggetti che cadono con la TESTA per far crescere i capelli!</p>
+            <p>🏆 Riempi la testa di 20 capelli per passare al livello successivo!</p>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Responsive canvas
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Game variables
+        let gameState = {
+            hairCount: 0,
+            level: 1,
+            gameOver: false,
+            hits: 0,
+            maxHairs: 20
+        };
+        
+        let biker = {
+            x: canvas.width / 2,
+            y: canvas.height - 80,
+            width: 40,
+            height: 50,
+            vx: 0,
+            vy: 0,
+            headX: 0,
+            headY: -14,
+            headRadius: 10
+        };
+        
+        let obstacles = [];
+        let particles = [];
+        let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+        
+        // Mouse movement
+        document.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = e.clientX - rect.left;
+        });
+
+        // Touch: movimento relativo (swipe)
+        let lastTouchX = null;
+
+        document.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            lastTouchX = e.touches[0].clientX;
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touchX = e.touches[0].clientX;
+            if (lastTouchX !== null) {
+                const delta = touchX - lastTouchX;
+                mouse.x = Math.max(30, Math.min(canvas.width - 30, mouse.x + delta * 1.5));
+            }
+            lastTouchX = touchX;
+        }, { passive: false });
+
+        document.addEventListener('touchend', () => {
+            lastTouchX = null;
+        });
+        
+        // Restart button
+        document.getElementById('restartBtn').addEventListener('click', () => {
+            location.reload();
+        });
+        
+        // Draw biker
+        function drawBiker() {
+            ctx.save();
+            ctx.translate(biker.x, biker.y);
+            
+            // MOTO SPORTIVA ROSSA
+            // Ruote
+            ctx.fillStyle = '#111';
+            ctx.beginPath();
+            ctx.arc(-12, 35, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(12, 35, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Cerchi delle ruote (argento)
+            ctx.strokeStyle = '#C0C0C0';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(-12, 35, 6, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(12, 35, 6, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Carena anteriore (rosso brillante)
+            ctx.fillStyle = '#FF0000';
+            ctx.beginPath();
+            ctx.ellipse(-8, 18, 10, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Serbatoio (rosso scuro)
+            ctx.fillStyle = '#CC0000';
+            ctx.fillRect(-10, 8, 20, 12);
+            ctx.fillRect(-12, 15, 24, 6);
+            
+            // Motore/corpo principale (nero)
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(-8, 20, 16, 10);
+            
+            // Marmitta/scarico (argento)
+            ctx.fillStyle = '#D3D3D3';
+            ctx.fillRect(10, 22, 4, 6);
+            ctx.fillRect(12, 24, 3, 4);
+            
+            // Manubrio (nero)
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-6, 8);
+            ctx.lineTo(-6, 0);
+            ctx.lineTo(-10, 2);
+            ctx.lineTo(-2, 2);
+            ctx.stroke();
+            
+            // Sedile
+            ctx.fillStyle = '#333';
+            ctx.fillRect(-8, 8, 16, 4);
+            
+            // Faro (giallo)
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(-5, 15, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#FFA500';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            // PILOTA
+            // Corpo
+            ctx.fillStyle = '#FF6347';
+            ctx.fillRect(-7, -8, 14, 12);
+            
+            // Giacca nera
+            ctx.fillStyle = '#222';
+            ctx.fillRect(-8, -8, 16, 4);
+            
+            // Testa (CALVA o CON CAPELLI)
+            ctx.fillStyle = '#F4A460';
+            ctx.beginPath();
+            ctx.arc(0, -14, 10, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Capelli (se presenti)
+            if (gameState.hairCount > 0) {
+                ctx.fillStyle = '#8B4513';
+                const hairAmount = Math.min(gameState.hairCount, 20);
+                for (let i = 0; i < hairAmount; i++) {
+                    const angle = (i / 20) * Math.PI * 2;
+                    const length = 6 + (gameState.hairCount * 0.3);
+                    const startX = Math.cos(angle) * 10;
+                    const startY = Math.sin(angle) * 10 - 14;
+                    const endX = Math.cos(angle) * (10 + length);
+                    const endY = Math.sin(angle) * (10 + length) - 14;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY);
+                    ctx.lineTo(endX, endY);
+                    ctx.strokeStyle = '#8B4513';
+                    ctx.lineWidth = 2.5;
+                    ctx.stroke();
+                }
+            }
+            
+            // Occhi
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(-4, -15, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(4, -15, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Sorriso
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(0, -12, 3, 0, Math.PI, false);
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+        
+        // Draw obstacles
+        function drawObstacles() {
+            obstacles.forEach((obs) => {
+                ctx.fillStyle = '#FF4500';
+                ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+                
+                // Occhi malvagi
+                ctx.fillStyle = '#000';
+                ctx.fillRect(obs.x + 5, obs.y + 5, 4, 4);
+                ctx.fillRect(obs.x + obs.width - 9, obs.y + 5, 4, 4);
+                
+                // Bocca cattiva
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(obs.x + 8, obs.y + 15);
+                ctx.lineTo(obs.x + obs.width - 8, obs.y + 15);
+                ctx.stroke();
+            });
+        }
+        
+        // Draw particles
+        function drawParticles() {
+            particles.forEach((p, index) => {
+                ctx.globalAlpha = p.life / p.maxLife;
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, 4, 4);
+            });
+            ctx.globalAlpha = 1;
+        }
+        
+        // Spawn obstacles
+        function spawnObstacle() {
+            const size = 25;
+            obstacles.push({
+                x: Math.random() * (canvas.width - size),
+                y: -size,
+                width: size,
+                height: size,
+                speed: 1.5 + gameState.level * 0.5,
+                hit: false
+            });
+        }
+        
+        // Collision detection (circle vs rect)
+        function checkHeadCollision(headX, headY, headRadius, rectX, rectY, rectW, rectH) {
+            let closestX = Math.max(rectX, Math.min(headX, rectX + rectW));
+            let closestY = Math.max(rectY, Math.min(headY, rectY + rectH));
+            
+            let dx = headX - closestX;
+            let dy = headY - closestY;
+            
+            return (dx * dx + dy * dy) < (headRadius * headRadius);
+        }
+        
+        // Update game
+        function update() {
+            if (gameState.gameOver) return;
+            
+            // Biker movement
+            let targetX = mouse.x;
+            biker.vx = (targetX - biker.x) * 0.15;
+            biker.x += biker.vx;
+            
+            // Boundaries
+            biker.x = Math.max(30, Math.min(canvas.width - 30, biker.x));
+            
+            // Head position in world coordinates
+            let headWorldX = biker.x + biker.headX;
+            let headWorldY = biker.y + biker.headY;
+            
+            // Update obstacles
+            obstacles.forEach((obs, index) => {
+                obs.y += obs.speed;
+                
+                // Collision with head
+                if (!obs.hit && checkHeadCollision(headWorldX, headWorldY, biker.headRadius, obs.x, obs.y, obs.width, obs.height)) {
+                    obs.hit = true;
+                    gameState.hairCount++;
+                    gameState.hits++;
+                    
+                    // Particles
+                    for (let i = 0; i < 15; i++) {
+                        particles.push({
+                            x: obs.x + obs.width / 2,
+                            y: obs.y + obs.height / 2,
+                            vx: (Math.random() - 0.5) * 6,
+                            vy: (Math.random() - 0.5) * 6 - 2,
+                            life: 40,
+                            maxLife: 40,
+                            color: '#FFD700'
+                        });
+                    }
+                    
+                    // Check if level complete
+                    if (gameState.hairCount >= gameState.maxHairs) {
+                        levelUp();
+                    }
+                }
+                
+                if (obs.y > canvas.height) {
+                    obstacles.splice(index, 1);
+                }
+            });
+            
+            // Update particles
+            particles.forEach((p, index) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.2; // gravity
+                p.life--;
+                if (p.life <= 0) particles.splice(index, 1);
+            });
+            
+            updateStats();
+        }
+        
+        // Level up
+        function levelUp() {
+            gameState.level++;
+            gameState.hairCount = 0;
+            document.getElementById('message').textContent = '⭐ LIVELLO ' + gameState.level + '! Gli oggetti cadono più veloce! ⭐';
+            document.getElementById('message').style.color = '#4CAF50';
+            setTimeout(() => {
+                document.getElementById('message').textContent = '';
+            }, 2000);
+        }
+        
+        // Draw everything
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            drawBiker();
+            drawObstacles();
+            drawParticles();
+            
+            // Draw head hitbox (debug - facoltativo)
+            // ctx.strokeStyle = 'rgba(255,0,0,0.3)';
+            // ctx.beginPath();
+            // ctx.arc(biker.x + biker.headX, biker.y + biker.headY, biker.headRadius, 0, Math.PI * 2);
+            // ctx.stroke();
+        }
+        
+        // Game loop
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Update stats
+        function updateStats() {
+            document.getElementById('hairCount').textContent = gameState.hairCount;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('hits').textContent = gameState.hits;
+        }
+        
+        // Spawn obstacles periodically
+        setInterval(() => {
+            if (!gameState.gameOver) {
+                spawnObstacle();
+            }
+        }, Math.max(700, 1400 - gameState.level * 150));
+        
+        // Start game
+        updateStats();
+        gameLoop();
+    </script>
+</body>
+</html>
