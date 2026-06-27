@@ -6,315 +6,381 @@
     <title>Biker Calvo</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-            background: #222;
-        }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: #222; font-family: Arial, sans-serif; }
+        canvas { display: block; position: fixed; top: 0; left: 0; touch-action: none; }
 
         #ui {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 6px 10px;
-            background: rgba(0,0,0,0.5);
-            color: white;
-            z-index: 10;
+            position: fixed; top: 0; left: 0; right: 0;
+            display: flex; justify-content: space-around; align-items: center;
+            background: rgba(0,0,0,0.5); color: white; z-index: 10;
+            padding: 0.8vh 2vw;
         }
-
         .stat { text-align: center; }
-        .stat-label { font-size: 0.6em; opacity: 0.8; }
-        .stat-value { font-size: 1.2em; font-weight: bold; }
-
-        h1 { font-size: 0.9em; letter-spacing: 1px; }
+        .stat-label { font-size: 1.5vmin; opacity: 0.8; }
+        .stat-value { font-size: 3vmin; font-weight: bold; }
+        h1 { font-size: 2.5vmin; letter-spacing: 1px; }
 
         #footer {
-            position: fixed;
-            bottom: 0; left: 0; right: 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 12px;
-            background: rgba(0,0,0,0.5);
-            z-index: 10;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.5); z-index: 10;
+            padding: 0.8vh 2vw; gap: 1vw;
         }
-
-        #message {
-            color: #FFD700;
-            font-size: 0.85em;
-            font-weight: bold;
-            flex: 1;
-            text-align: center;
+        #message { color: #FFD700; font-size: 2vmin; font-weight: bold; flex: 1; text-align: center; }
+        #restartBtn, #muteBtn {
+            font-size: 2vmin; border: none; border-radius: 1vmin;
+            cursor: pointer; font-weight: bold; padding: 0.8vh 1.5vw;
         }
-
-        #restartBtn {
-            padding: 6px 14px;
-            font-size: 0.85em;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            background: #f44336;
-            color: white;
-        }
-
-        canvas {
-            display: block;
-            position: fixed;
-            top: 0; left: 0;
-            touch-action: none;
-        }
+        #restartBtn { background: #f44336; color: white; }
+        #muteBtn { background: #333; color: white; }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas"></canvas>
+<canvas id="gameCanvas"></canvas>
 
-    <div id="ui">
-        <div class="stat">
-            <div class="stat-label">CAPELLI</div>
-            <div class="stat-value"><span id="hairCount">0</span>/20</div>
-        </div>
-        <h1>🏍️ BIKER CALVO</h1>
-        <div class="stat">
-            <div class="stat-label">LIVELLO</div>
-            <div class="stat-value" id="level">1</div>
-        </div>
+<div id="ui">
+    <div class="stat">
+        <div class="stat-label">CAPELLI</div>
+        <div class="stat-value"><span id="hairCount">0</span>/20</div>
     </div>
-
-    <div id="footer">
-        <div id="message">💥 Urta gli oggetti con la testa!</div>
-        <button id="restartBtn">🔄</button>
+    <h1>🏍️ BIKER CALVO</h1>
+    <div class="stat">
+        <div class="stat-label">LIVELLO</div>
+        <div class="stat-value" id="level">1</div>
     </div>
+</div>
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+<div id="footer">
+    <div id="message">💥 Urta gli oggetti con la testa!</div>
+    <button id="muteBtn">🔇</button>
+    <button id="restartBtn">🔄</button>
+</div>
 
-        let W = window.innerWidth;
-        let H = window.innerHeight;
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-        let gameState = { hairCount: 0, level: 1, gameOver: false, maxHairs: 20 };
-        let biker = { x: W / 2, y: H - 90, headX: 0, headY: -14, headRadius: 10 };
-        let obstacles = [], particles = [];
-        let mouse = { x: W / 2 };
+let W, H, S; // S = scale factor
 
-        function resizeCanvas() {
-            W = window.innerWidth;
-            H = window.innerHeight;
-            canvas.width = W;
-            canvas.height = H;
-            biker.y = H - 90;
-            biker.x = Math.max(30, Math.min(W - 30, biker.x));
-            mouse.x = biker.x;
+function calcScale() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    S = Math.min(W, H) / 400; // base reference 400px
+}
+
+let gameState = { hairCount: 0, level: 1, gameOver: false, maxHairs: 20 };
+let biker = { x: 0, y: 0, headX: 0, headY: 0, headRadius: 0 };
+let obstacles = [], particles = [];
+let mouse = { x: 0 };
+
+function resizeCanvas() {
+    calcScale();
+    canvas.width = W;
+    canvas.height = H;
+    const footerH = document.getElementById('footer').offsetHeight;
+    const bikerHeight = 50 * S; // altezza totale biker dal top della testa alle ruote
+    biker.y = H - footerH - bikerHeight;
+    biker.headY = -14 * S;
+    biker.headRadius = 10 * S;
+    if (biker.x === 0) biker.x = W / 2;
+    biker.x = Math.max(30 * S, Math.min(W - 30 * S, biker.x));
+    mouse.x = biker.x;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// Mouse
+document.addEventListener('mousemove', e => { mouse.x = e.clientX; });
+
+// Touch
+let lastTouchX = null;
+document.addEventListener('touchstart', e => {
+    e.preventDefault(); lastTouchX = e.touches[0].clientX;
+}, { passive: false });
+document.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const tx = e.touches[0].clientX;
+    if (lastTouchX !== null) {
+        mouse.x = Math.max(30 * S, Math.min(W - 30 * S, mouse.x + (tx - lastTouchX) * 1.5));
+    }
+    lastTouchX = tx;
+}, { passive: false });
+document.addEventListener('touchend', () => { lastTouchX = null; });
+
+document.getElementById('restartBtn').addEventListener('click', () => location.reload());
+
+// ── MUSIC ──────────────────────────────────────────────────────────────────
+let audioCtx = null, muted = true, musicNodes = [];
+
+function startMusic() {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioCtx.suspend(); // parte silenziato
+    const master = audioCtx.createGain();
+    master.gain.value = 0.18;
+    master.connect(audioCtx.destination);
+    musicNodes.push(master);
+
+    // Simple looping chiptune: notes played by oscillators
+    const bpm = 160;
+    const beat = 60 / bpm;
+    const melody = [
+        262,0,330,0,392,0,523,0,
+        494,0,440,0,392,0,330,0,
+        294,0,330,0,392,0,440,0,
+        392,0,330,0,294,0,262,0
+    ]; // C4 E4 G4 C5 B4 A4 G4 E4 D4 E4 G4 A4 G4 E4 D4 C4
+    const bassLine = [131,0,131,0,110,0,110,0,98,0,98,0,110,0,131,0];
+
+    function playLoop(noteArr, type, gainVal, startTime, octaveShift) {
+        const g = audioCtx.createGain();
+        g.gain.value = gainVal;
+        g.connect(master);
+        const totalDur = noteArr.length * beat;
+
+        function scheduleNote(i, t) {
+            const freq = noteArr[i] * (octaveShift || 1);
+            if (freq === 0) return;
+            const osc = audioCtx.createOscillator();
+            const ng = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            ng.gain.setValueAtTime(gainVal, t);
+            ng.gain.exponentialRampToValueAtTime(0.001, t + beat * 0.8);
+            osc.connect(ng); ng.connect(master);
+            osc.start(t); osc.stop(t + beat);
         }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
 
-        // Mouse
-        document.addEventListener('mousemove', (e) => {
-            mouse.x = e.clientX;
-        });
-
-        // Touch swipe relativo
-        let lastTouchX = null;
-        document.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            lastTouchX = e.touches[0].clientX;
-        }, { passive: false });
-        document.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            const tx = e.touches[0].clientX;
-            if (lastTouchX !== null) {
-                const delta = tx - lastTouchX;
-                mouse.x = Math.max(30, Math.min(W - 30, mouse.x + delta * 1.5));
+        function loop(startT) {
+            for (let i = 0; i < noteArr.length; i++) {
+                scheduleNote(i, startT + i * beat);
             }
-            lastTouchX = tx;
-        }, { passive: false });
-        document.addEventListener('touchend', () => { lastTouchX = null; });
+            const next = startT + totalDur;
+            const delay = (next - audioCtx.currentTime) * 1000 - 200;
+            setTimeout(() => { if (!muted) loop(next); }, Math.max(0, delay));
+        }
+        loop(startTime);
+    }
 
-        document.getElementById('restartBtn').addEventListener('click', () => location.reload());
+    const now = audioCtx.currentTime + 0.1;
+    playLoop(melody, 'square', 0.4, now, 1);
+    playLoop(bassLine, 'sawtooth', 0.3, now, 1);
 
-        function drawBiker() {
-            ctx.save();
-            ctx.translate(biker.x, biker.y);
+    // Percussion: simple kick with noise burst
+    function kick(t) {
+        const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.2, audioCtx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.05));
+        const src = audioCtx.createBufferSource();
+        src.buffer = buf;
+        const g = audioCtx.createGain(); g.gain.value = 0.5;
+        src.connect(g); g.connect(master);
+        src.start(t);
+    }
+    function kickLoop(t) {
+        const interval = beat * 4;
+        for (let i = 0; i < 4; i++) kick(t + i * interval);
+        const next = t + interval * 4;
+        const delay = (next - audioCtx.currentTime) * 1000 - 200;
+        setTimeout(() => { if (!muted) kickLoop(next); }, Math.max(0, delay));
+    }
+    kickLoop(now);
+}
 
-            // Ruote
-            ctx.fillStyle = '#111';
-            ctx.beginPath(); ctx.arc(-12, 35, 8, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(12, 35, 8, 0, Math.PI * 2); ctx.fill();
-            ctx.strokeStyle = '#C0C0C0'; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.arc(-12, 35, 6, 0, Math.PI * 2); ctx.stroke();
-            ctx.beginPath(); ctx.arc(12, 35, 6, 0, Math.PI * 2); ctx.stroke();
+document.getElementById('muteBtn').addEventListener('click', () => {
+    if (!audioCtx) startMusic();
+    muted = !muted;
+    document.getElementById('muteBtn').textContent = muted ? '🔇' : '🔊';
+    muted ? audioCtx.suspend() : audioCtx.resume();
+});
 
-            // Carena
-            ctx.fillStyle = '#FF0000';
-            ctx.beginPath(); ctx.ellipse(-8, 18, 10, 8, 0, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#CC0000';
-            ctx.fillRect(-10, 8, 20, 12);
-            ctx.fillRect(-12, 15, 24, 6);
+// First interaction starts music
+function onFirstInteraction() {
+    startMusic();
+    document.removeEventListener('click', onFirstInteraction);
+    document.removeEventListener('touchstart', onFirstInteraction);
+    document.removeEventListener('keydown', onFirstInteraction);
+}
+document.addEventListener('click', onFirstInteraction);
+document.addEventListener('touchstart', onFirstInteraction);
+document.addEventListener('keydown', onFirstInteraction);
+// ──────────────────────────────────────────────────────────────────────────
 
-            // Motore
-            ctx.fillStyle = '#1a1a1a'; ctx.fillRect(-8, 20, 16, 10);
-            ctx.fillStyle = '#D3D3D3'; ctx.fillRect(10, 22, 4, 6);
 
-            // Manubrio
-            ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.moveTo(-6, 8); ctx.lineTo(-6, 0); ctx.lineTo(-10, 2); ctx.lineTo(-2, 2); ctx.stroke();
-            ctx.fillStyle = '#333'; ctx.fillRect(-8, 8, 16, 4);
+function drawBiker() {
+    ctx.save();
+    ctx.translate(biker.x, biker.y);
+    ctx.scale(S, S);
 
-            // Faro
-            ctx.fillStyle = '#FFD700';
-            ctx.beginPath(); ctx.arc(-5, 15, 2, 0, Math.PI * 2); ctx.fill();
+    // Ruote
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(-12, 35, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(12, 35, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#C0C0C0'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(-12, 35, 6, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(12, 35, 6, 0, Math.PI * 2); ctx.stroke();
 
-            // Corpo pilota
-            ctx.fillStyle = '#FF6347'; ctx.fillRect(-7, -8, 14, 12);
-            ctx.fillStyle = '#222'; ctx.fillRect(-8, -8, 16, 4);
+    // Carena
+    ctx.fillStyle = '#FF0000';
+    ctx.beginPath(); ctx.ellipse(-8, 18, 10, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#CC0000';
+    ctx.fillRect(-10, 8, 20, 12); ctx.fillRect(-12, 15, 24, 6);
 
-            // Testa
-            ctx.fillStyle = '#F4A460';
-            ctx.beginPath(); ctx.arc(0, -14, 10, 0, Math.PI * 2); ctx.fill();
+    // Motore + marmitta
+    ctx.fillStyle = '#1a1a1a'; ctx.fillRect(-8, 20, 16, 10);
+    ctx.fillStyle = '#D3D3D3'; ctx.fillRect(10, 22, 4, 6);
 
-            // Capelli
-            for (let i = 0; i < gameState.hairCount; i++) {
-                const angle = (i / 20) * Math.PI * 2;
-                const len = 6 + gameState.hairCount * 0.3;
-                ctx.beginPath();
-                ctx.moveTo(Math.cos(angle) * 10, Math.sin(angle) * 10 - 14);
-                ctx.lineTo(Math.cos(angle) * (10 + len), Math.sin(angle) * (10 + len) - 14);
-                ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 2.5; ctx.stroke();
+    // Manubrio
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-6,8); ctx.lineTo(-6,0); ctx.lineTo(-10,2); ctx.lineTo(-2,2); ctx.stroke();
+    ctx.fillStyle = '#333'; ctx.fillRect(-8, 8, 16, 4);
+
+    // Faro
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath(); ctx.arc(-5, 15, 2, 0, Math.PI * 2); ctx.fill();
+
+    // Corpo + giacca
+    ctx.fillStyle = '#FF6347'; ctx.fillRect(-7, -8, 14, 12);
+    ctx.fillStyle = '#222'; ctx.fillRect(-8, -8, 16, 4);
+
+    // Testa
+    ctx.fillStyle = '#F4A460';
+    ctx.beginPath(); ctx.arc(0, -14, 10, 0, Math.PI * 2); ctx.fill();
+
+    // Capelli
+    for (let i = 0; i < gameState.hairCount; i++) {
+        const angle = (i / 20) * Math.PI * 2;
+        const len = 6 + gameState.hairCount * 0.3;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(angle) * 10, Math.sin(angle) * 10 - 14);
+        ctx.lineTo(Math.cos(angle) * (10 + len), Math.sin(angle) * (10 + len) - 14);
+        ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 2.5; ctx.stroke();
+    }
+
+    // Occhi
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.arc(-4, -15, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(4, -15, 1.5, 0, Math.PI * 2); ctx.fill();
+
+    // Sorriso
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(0, -12, 3, 0, Math.PI, false); ctx.stroke();
+
+    ctx.restore();
+}
+
+function drawBackground() {
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, '#87CEEB');
+    grad.addColorStop(1, '#E0F6FF');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+}
+
+function drawObstacles() {
+    const sz = 25 * S;
+    obstacles.forEach(obs => {
+        ctx.fillStyle = '#FF4500';
+        ctx.fillRect(obs.x, obs.y, sz, sz);
+        ctx.fillStyle = '#000';
+        ctx.fillRect(obs.x + 5 * S, obs.y + 5 * S, 4 * S, 4 * S);
+        ctx.fillRect(obs.x + sz - 9 * S, obs.y + 5 * S, 4 * S, 4 * S);
+        ctx.strokeStyle = '#000'; ctx.lineWidth = S;
+        ctx.beginPath();
+        ctx.moveTo(obs.x + 8 * S, obs.y + 15 * S);
+        ctx.lineTo(obs.x + sz - 8 * S, obs.y + 15 * S);
+        ctx.stroke();
+    });
+}
+
+function drawParticles() {
+    particles.forEach(p => {
+        ctx.globalAlpha = p.life / p.maxLife;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, 4 * S, 4 * S);
+    });
+    ctx.globalAlpha = 1;
+}
+
+function spawnObstacle() {
+    const sz = 25 * S;
+    obstacles.push({
+        x: Math.random() * (W - sz),
+        y: -sz,
+        speed: (1.5 + gameState.level * 0.5) * S,
+        hit: false
+    });
+}
+
+function checkHeadCollision(hx, hy, hr, rx, ry, sz) {
+    const cx = Math.max(rx, Math.min(hx, rx + sz));
+    const cy = Math.max(ry, Math.min(hy, ry + sz));
+    return (hx - cx) ** 2 + (hy - cy) ** 2 < hr * hr;
+}
+
+function update() {
+    if (gameState.gameOver) return;
+
+    biker.x += (mouse.x - biker.x) * 0.15;
+    biker.x = Math.max(30 * S, Math.min(W - 30 * S, biker.x));
+    // biker.y calcolato nel resize
+
+    const hx = biker.x;
+    const hy = biker.y + biker.headY;
+    const sz = 25 * S;
+
+    for (let i = obstacles.length - 1; i >= 0; i--) {
+        const obs = obstacles[i];
+        obs.y += obs.speed;
+
+        if (!obs.hit && checkHeadCollision(hx, hy, biker.headRadius, obs.x, obs.y, sz)) {
+            obs.hit = true;
+            gameState.hairCount++;
+            for (let j = 0; j < 15; j++) {
+                particles.push({
+                    x: obs.x + sz / 2, y: obs.y + sz / 2,
+                    vx: (Math.random() - 0.5) * 6 * S,
+                    vy: (Math.random() - 0.5) * 6 * S - 2 * S,
+                    life: 40, maxLife: 40, color: '#FFD700'
+                });
             }
-
-            // Occhi
-            ctx.fillStyle = '#000';
-            ctx.beginPath(); ctx.arc(-4, -15, 1.5, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(4, -15, 1.5, 0, Math.PI * 2); ctx.fill();
-
-            // Sorriso
-            ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.arc(0, -12, 3, 0, Math.PI, false); ctx.stroke();
-
-            ctx.restore();
+            if (gameState.hairCount >= gameState.maxHairs) levelUp();
         }
+        if (obs.y > H) obstacles.splice(i, 1);
+    }
 
-        function drawBackground() {
-            const grad = ctx.createLinearGradient(0, 0, 0, H);
-            grad.addColorStop(0, '#87CEEB');
-            grad.addColorStop(1, '#E0F6FF');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, W, H);
-        }
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy; p.vy += 0.2 * S; p.life--;
+        if (p.life <= 0) particles.splice(i, 1);
+    }
 
-        function drawObstacles() {
-            obstacles.forEach(obs => {
-                ctx.fillStyle = '#FF4500';
-                ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-                ctx.fillStyle = '#000';
-                ctx.fillRect(obs.x + 5, obs.y + 5, 4, 4);
-                ctx.fillRect(obs.x + obs.width - 9, obs.y + 5, 4, 4);
-                ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(obs.x + 8, obs.y + 15);
-                ctx.lineTo(obs.x + obs.width - 8, obs.y + 15);
-                ctx.stroke();
-            });
-        }
+    document.getElementById('hairCount').textContent = gameState.hairCount;
+    document.getElementById('level').textContent = gameState.level;
+}
 
-        function drawParticles() {
-            particles.forEach(p => {
-                ctx.globalAlpha = p.life / p.maxLife;
-                ctx.fillStyle = p.color;
-                ctx.fillRect(p.x, p.y, 4, 4);
-            });
-            ctx.globalAlpha = 1;
-        }
+function levelUp() {
+    gameState.level++;
+    gameState.hairCount = 0;
+    const msg = document.getElementById('message');
+    msg.textContent = '⭐ LIVELLO ' + gameState.level + '! Più veloce!';
+    setTimeout(() => { msg.textContent = '💥 Urta gli oggetti con la testa!'; }, 2000);
+}
 
-        function spawnObstacle() {
-            const size = 25;
-            obstacles.push({
-                x: Math.random() * (W - size),
-                y: -size, width: size, height: size,
-                speed: 1.5 + gameState.level * 0.5,
-                hit: false
-            });
-        }
+function draw() {
+    drawBackground();
+    drawBiker();
+    drawObstacles();
+    drawParticles();
+}
 
-        function checkHeadCollision(hx, hy, hr, rx, ry, rw, rh) {
-            const cx = Math.max(rx, Math.min(hx, rx + rw));
-            const cy = Math.max(ry, Math.min(hy, ry + rh));
-            return (hx - cx) ** 2 + (hy - cy) ** 2 < hr * hr;
-        }
+function gameLoop() { update(); draw(); requestAnimationFrame(gameLoop); }
 
-        function update() {
-            if (gameState.gameOver) return;
+setInterval(() => {
+    if (!gameState.gameOver) spawnObstacle();
+}, Math.max(700, 1400 - gameState.level * 150));
 
-            biker.x += (mouse.x - biker.x) * 0.15;
-            biker.x = Math.max(30, Math.min(W - 30, biker.x));
-            biker.y = H - 90;
-
-            const hx = biker.x + biker.headX;
-            const hy = biker.y + biker.headY;
-
-            for (let i = obstacles.length - 1; i >= 0; i--) {
-                const obs = obstacles[i];
-                obs.y += obs.speed;
-
-                if (!obs.hit && checkHeadCollision(hx, hy, biker.headRadius, obs.x, obs.y, obs.width, obs.height)) {
-                    obs.hit = true;
-                    gameState.hairCount++;
-                    for (let j = 0; j < 15; j++) {
-                        particles.push({
-                            x: obs.x + obs.width / 2, y: obs.y + obs.height / 2,
-                            vx: (Math.random() - 0.5) * 6, vy: (Math.random() - 0.5) * 6 - 2,
-                            life: 40, maxLife: 40, color: '#FFD700'
-                        });
-                    }
-                    if (gameState.hairCount >= gameState.maxHairs) levelUp();
-                }
-
-                if (obs.y > H) obstacles.splice(i, 1);
-            }
-
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.x += p.vx; p.y += p.vy; p.vy += 0.2; p.life--;
-                if (p.life <= 0) particles.splice(i, 1);
-            }
-
-            document.getElementById('hairCount').textContent = gameState.hairCount;
-            document.getElementById('level').textContent = gameState.level;
-        }
-
-        function levelUp() {
-            gameState.level++;
-            gameState.hairCount = 0;
-            const msg = document.getElementById('message');
-            msg.textContent = '⭐ LIVELLO ' + gameState.level + '! Più veloce!';
-            setTimeout(() => { msg.textContent = '💥 Urta gli oggetti con la testa!'; }, 2000);
-        }
-
-        function draw() {
-            drawBackground();
-            drawBiker();
-            drawObstacles();
-            drawParticles();
-        }
-
-        function gameLoop() {
-            update();
-            draw();
-            requestAnimationFrame(gameLoop);
-        }
-
-        setInterval(() => {
-            if (!gameState.gameOver) spawnObstacle();
-        }, Math.max(700, 1400 - gameState.level * 150));
-
-        gameLoop();
-    </script>
+gameLoop();
+</script>
 </body>
 </html>
